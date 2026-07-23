@@ -32,7 +32,4 @@ public class AccountEntity extends BaseEntity implements Serializable {
     @Column(name = "branch_address", nullable = false)
     private String branchAddress;
 
-    @Column(name = "balance", nullable = false)
-    private Double balance;
-
 }
