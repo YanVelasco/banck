@@ -1,0 +1,55 @@
+# Maven / Java
+HELP.md
+target/
+!**/src/main/**/target/
+!**/src/test/**/target/
+build/
+!**/src/main/**/build/
+!**/src/test/**/build/
+*.class
+*.jar
+*.war
+*.ear
+*.log
+hs_err_pid*
+replay_pid*
+.mvn/wrapper/maven-wrapper.jar
+
+# Environment / local config
+.env
+.env.*
+!.env.example
+
+# IDEs
+.idea/
+*.iml
+*.iws
+*.ipr
+.vscode/
+.classpath
+.factorypath
+.project
+.settings/
+.apt_generated/
+.springBeans
+.sts4-cache/
+.metadata/
+
+# NetBeans
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+
+# OS files
+.DS_Store
+Thumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Misc
+*.tmp
+*.bak
+*.swp
+*.swo
