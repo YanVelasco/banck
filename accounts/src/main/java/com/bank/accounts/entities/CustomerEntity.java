@@ -13,6 +13,7 @@ import java.io.Serializable;
 @ToString
 @AllArgsConstructor
 @NoArgsConstructor
+@Builder
 public class CustomerEntity extends BaseEntity implements Serializable {
 
     @Serial
