@@ -77,6 +77,17 @@ public class AccountServiceImpl implements IAccountService {
         return isUpdated;
     }
 
+    @Override
+    public boolean deleteAccount(String mobileNumber) {
+        var customerEntity = customerRepository.findByMobileNumber(mobileNumber)
+                .orElseThrow(() -> new NotFoundException("Customer with mobile number " + mobileNumber + " not found."));
+
+        accountRepository.deleteByCustomerId(customerEntity.getCustomerId());
+        customerRepository.deleteById(customerEntity.getCustomerId());
+
+        return true;
+    }
+
     private AccountEntity createAccountEntity(CustomerEntity customerEntity) {
 
         long randomAccNumber = generateUniqueAccountNumber();

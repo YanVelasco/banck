@@ -12,7 +12,8 @@ public enum AccountConstantsEnum {
     STATUS_200("200"),
     MESSAGE_200("Account retrieved successfully"),
     STATUS_500("500"),
-    MESSAGE_500("Internal server error");
+    MESSAGE_500("Internal server error"),
+    STATUS_204("204");
 
     private final String value;
 
