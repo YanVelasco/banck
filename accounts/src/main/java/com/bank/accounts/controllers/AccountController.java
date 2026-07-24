@@ -1,16 +1,13 @@
 package com.bank.accounts.controllers;
 
-import com.bank.accounts.enums.AccountConstantsEnum;
 import com.bank.accounts.dtos.CustomerDto;
-import com.bank.accounts.dtos.response.ResponseDto;
+import com.bank.accounts.dtos.ResponseDto;
+import com.bank.accounts.enums.AccountConstantsEnum;
 import com.bank.accounts.services.IAccountService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping(path = "/api", produces = {MediaType.APPLICATION_JSON_VALUE})
@@ -34,5 +31,14 @@ public class AccountController {
                         .build()
         );
     }
+
+    @GetMapping("/get/{mobileNumber}")
+    public ResponseEntity<CustomerDto> fetchAccountDetails(
+            @PathVariable String mobileNumber
+    ) {
+        CustomerDto customerDto = accountService.fetchAccountDetails(mobileNumber);
+        return ResponseEntity.status(HttpStatus.OK).body(customerDto);
+    }
+
 
 }

@@ -5,6 +5,7 @@ import com.bank.accounts.entities.AccountEntity;
 import com.bank.accounts.entities.CustomerEntity;
 import com.bank.accounts.enums.AccountConstantsEnum;
 import com.bank.accounts.exceptions.AlreadyExistsException;
+import com.bank.accounts.exceptions.NotFoundException;
 import com.bank.accounts.mapper.CustomerMapper;
 import com.bank.accounts.repositories.AccountRepository;
 import com.bank.accounts.repositories.CustomerRepository;
@@ -41,6 +42,15 @@ public class AccountServiceImpl implements IAccountService {
         accountEntity.setCreatedAt(LocalDateTime.now(ZoneId.of("UTC")));
         accountEntity.setCreatedBy("anonymous");
         accountRepository.save(accountEntity);
+    }
+
+    @Override
+    public CustomerDto fetchAccountDetails(String mobileNumber) {
+        var customerEntity = customerRepository.findByMobileNumber(mobileNumber)
+                .orElseThrow(() -> new NotFoundException("Customer with mobile number " + mobileNumber + " not found."));
+        var account = accountRepository.findByCustomerId(customerEntity.getCustomerId())
+                .orElseThrow(() -> new NotFoundException("Account for customer with mobile number " + mobileNumber + " not found."));
+        return CustomerMapper.toCustomerDto(customerEntity, account);
     }
 
     private AccountEntity createAccountEntity(CustomerEntity customerEntity) {

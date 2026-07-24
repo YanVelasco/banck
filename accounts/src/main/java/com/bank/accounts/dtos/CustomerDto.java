@@ -6,6 +6,7 @@ import lombok.Builder;
 public record CustomerDto(
         String name,
         String email,
-        String mobileNumber
+        String mobileNumber,
+        AccountDto accountDto
 ) {
 }

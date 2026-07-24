@@ -1,4 +1,4 @@
-package com.bank.accounts.dtos.response;
+package com.bank.accounts.dtos;
 
 import org.springframework.http.HttpStatus;
 

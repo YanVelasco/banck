@@ -3,6 +3,10 @@ package com.bank.accounts.repositories;
 import com.bank.accounts.entities.AccountEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.util.Optional;
+
 public interface AccountRepository extends JpaRepository<AccountEntity, Long> {
     boolean existsByAccountNumber(long number);
+
+    Optional<AccountEntity> findByCustomerId(Long customerId);
 }
