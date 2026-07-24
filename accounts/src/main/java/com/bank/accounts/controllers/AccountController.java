@@ -40,5 +40,27 @@ public class AccountController {
         return ResponseEntity.status(HttpStatus.OK).body(customerDto);
     }
 
+    @PutMapping("/update")
+    public ResponseEntity<ResponseDto> updateAccountDetails(
+            @RequestBody CustomerDto customerDto
+    ) {
+        boolean isUpdated = accountService.updateAccountDetails(customerDto);
+        if (isUpdated) {
+            return ResponseEntity.status(HttpStatus.OK).body(
+                    ResponseDto.builder()
+                            .statusCode(AccountConstantsEnum.STATUS_200.getValue())
+                            .statusMessage(AccountConstantsEnum.MESSAGE_200.getValue())
+                            .build()
+            );
+        } else {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
+                    ResponseDto.builder()
+                            .statusCode(AccountConstantsEnum.STATUS_500.getValue())
+                            .statusMessage(AccountConstantsEnum.MESSAGE_500.getValue())
+                            .build()
+            );
+        }
+    }
+
 
 }

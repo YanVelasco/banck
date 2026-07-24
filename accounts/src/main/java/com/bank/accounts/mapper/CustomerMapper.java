@@ -28,4 +28,9 @@ public class CustomerMapper {
                 .build();
     }
 
+    public static void updateCustomerEntity(CustomerEntity customerEntity, CustomerDto customerDto) {
+        customerEntity.setName(customerDto.name());
+        customerEntity.setEmail(customerDto.email());
+        customerEntity.setMobileNumber(customerDto.mobileNumber());
+    }
 }

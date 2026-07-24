@@ -21,4 +21,9 @@ public class AccountMapper {
                 .build();
     }
 
+    public static void updateAccountEntity(AccountEntity accountEntity, AccountDto accountDto) {
+        accountEntity.setAccountType(accountDto.accountType());
+        accountEntity.setBranchAddress(accountDto.branchAddress());
+    }
+
 }

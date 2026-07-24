@@ -6,6 +6,7 @@ import com.bank.accounts.entities.CustomerEntity;
 import com.bank.accounts.enums.AccountConstantsEnum;
 import com.bank.accounts.exceptions.AlreadyExistsException;
 import com.bank.accounts.exceptions.NotFoundException;
+import com.bank.accounts.mapper.AccountMapper;
 import com.bank.accounts.mapper.CustomerMapper;
 import com.bank.accounts.repositories.AccountRepository;
 import com.bank.accounts.repositories.CustomerRepository;
@@ -51,6 +52,29 @@ public class AccountServiceImpl implements IAccountService {
         var account = accountRepository.findByCustomerId(customerEntity.getCustomerId())
                 .orElseThrow(() -> new NotFoundException("Account for customer with mobile number " + mobileNumber + " not found."));
         return CustomerMapper.toCustomerDto(customerEntity, account);
+    }
+
+    @Override
+    public boolean updateAccountDetails(CustomerDto customerDto) {
+        var isUpdated = false;
+
+        var accountDto = customerDto.accountDto();
+        if (accountDto != null) {
+            AccountEntity accountEntity = accountRepository.findByAccountNumber((accountDto.accountNumber()))
+                    .orElseThrow(() -> new NotFoundException("Account with account number " + accountDto.accountNumber() + " not found."));
+            AccountMapper.updateAccountEntity(accountEntity, accountDto);
+            accountRepository.save(accountEntity);
+
+            Long customerId = accountEntity.getCustomerId();
+            CustomerEntity customerEntity = customerRepository.findByCustomerId(customerId)
+                    .orElseThrow(() -> new NotFoundException("Customer with ID " + customerId + " not found."));
+            CustomerMapper.updateCustomerEntity(customerEntity, customerDto);
+            customerRepository.save(customerEntity);
+
+            isUpdated = true;
+        }
+
+        return isUpdated;
     }
 
     private AccountEntity createAccountEntity(CustomerEntity customerEntity) {
