@@ -4,7 +4,9 @@ package com.bank.accounts.exceptions.globalexception;
 import com.bank.accounts.exceptions.*;
 import com.bank.accounts.exceptions.response.ErrorResponse;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -12,6 +14,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.context.request.WebRequest;
+import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 import org.springframework.web.servlet.NoHandlerFoundException;
 import tools.jackson.databind.ObjectMapper;
 
@@ -21,7 +24,7 @@ import java.util.Map;
 
 @Slf4j
 @RestControllerAdvice
-public class GlobalExceptionHandler {
+public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<ErrorResponse> handleAccessDeniedException(
@@ -74,9 +77,11 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(errorResponse, HttpStatus.CONFLICT);
     }
 
-    @ExceptionHandler(NoHandlerFoundException.class)
-    public ResponseEntity<ErrorResponse> handleNoHandlerFound(
+    @Override
+    protected ResponseEntity<Object> handleNoHandlerFoundException(
             NoHandlerFoundException ex,
+            HttpHeaders headers,
+            HttpStatusCode status,
             WebRequest request) {
 
         log.warn("Endpoint não encontrado: {} {}", ex.getHttpMethod(), ex.getRequestURL());
@@ -88,7 +93,7 @@ public class GlobalExceptionHandler {
                 ex.getRequestURL()
         );
 
-        return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
+        return new ResponseEntity<>(errorResponse, status);
     }
 
     @ExceptionHandler(InvalidImageException.class)
@@ -177,9 +182,12 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ErrorResponse> handleMethodArgumentNotValidException(
-            MethodArgumentNotValidException ex) {
+    @Override
+    protected ResponseEntity<Object> handleMethodArgumentNotValid(
+            MethodArgumentNotValidException ex,
+            HttpHeaders headers,
+            HttpStatusCode status,
+            WebRequest request) {
 
         log.error("Erro de validação nos argumentos do método: {}", ex.getMessage(), ex);
 
@@ -198,7 +206,7 @@ public class GlobalExceptionHandler {
                 errors
         );
 
-        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+        return new ResponseEntity<>(errorResponse, status);
     }
 
     @ExceptionHandler(SubscriptionAlreadyExistsException.class)
