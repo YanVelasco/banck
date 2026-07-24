@@ -35,13 +35,11 @@ public class AccountServiceImpl implements IAccountService {
         customerRepository.findByMobileNumberOrEmail(customerDto.mobileNumber(), customerDto.email()).ifPresent(existingCustomer -> {
             throw new AlreadyExistsException("Customer with mobile number " + customerDto.mobileNumber() + " or email " + customerDto.email() + " already exists.");
         });
+
         CustomerEntity customerEntity = CustomerMapper.toCustomerEntity(customerDto);
-        customerEntity.setCreatedAt(LocalDateTime.now(ZoneId.of("UTC")));
-        customerEntity.setCreatedBy("anonymous");
         customerRepository.save(customerEntity);
+
         AccountEntity accountEntity = createAccountEntity(customerEntity);
-        accountEntity.setCreatedAt(LocalDateTime.now(ZoneId.of("UTC")));
-        accountEntity.setCreatedBy("anonymous");
         accountRepository.save(accountEntity);
     }
 
