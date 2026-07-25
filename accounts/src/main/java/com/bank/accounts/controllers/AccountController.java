@@ -1,9 +1,17 @@
 package com.bank.accounts.controllers;
 
 import com.bank.accounts.dtos.CustomerDto;
+import com.bank.accounts.dtos.ErrorResponseDto;
 import com.bank.accounts.dtos.ResponseDto;
 import com.bank.accounts.enums.AccountConstantsEnum;
 import com.bank.accounts.services.IAccountService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Pattern;
 import org.springframework.http.HttpStatus;
@@ -12,6 +20,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+@Tag(name = "Account Management", description = "CRUD REST APIs for managing bank accounts and customer details")
 @RestController
 @RequestMapping(path = "/api", produces = {MediaType.APPLICATION_JSON_VALUE})
 @Validated
@@ -23,6 +32,18 @@ public class AccountController {
         this.accountService = accountService;
     }
 
+    @Operation(
+            summary = "Create a new bank account",
+            description = "Creates a new customer and associated bank account. Returns 201 on success."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "201", description = "Account created successfully",
+                    content = @Content(schema = @Schema(implementation = ResponseDto.class))),
+            @ApiResponse(responseCode = "400", description = "Invalid input data",
+                    content = @Content(schema = @Schema(implementation = ErrorResponseDto.class))),
+            @ApiResponse(responseCode = "500", description = "Internal server error",
+                    content = @Content(schema = @Schema(implementation = ErrorResponseDto.class)))
+    })
     @PostMapping("/create")
     public ResponseEntity<ResponseDto> createAccount(
             @RequestBody @Valid CustomerDto customerDto
@@ -36,14 +57,43 @@ public class AccountController {
         );
     }
 
+    @Operation(
+            summary = "Fetch account details",
+            description = "Retrieves customer and account details by mobile number (10 digits)."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Account details fetched successfully",
+                    content = @Content(schema = @Schema(implementation = CustomerDto.class))),
+            @ApiResponse(responseCode = "400", description = "Invalid mobile number format",
+                    content = @Content(schema = @Schema(implementation = ErrorResponseDto.class))),
+            @ApiResponse(responseCode = "404", description = "Customer or account not found",
+                    content = @Content(schema = @Schema(implementation = ErrorResponseDto.class))),
+            @ApiResponse(responseCode = "500", description = "Internal server error",
+                    content = @Content(schema = @Schema(implementation = ErrorResponseDto.class)))
+    })
     @GetMapping("/fetch")
     public ResponseEntity<CustomerDto> fetchAccountDetails(
+            @Parameter(description = "Customer mobile number (exactly 10 digits)", example = "1234567890")
             @RequestParam @Valid @Pattern(regexp = "\\d{10}", message = "Mobile number must be 10 digits") String mobileNumber
     ) {
         CustomerDto customerDto = accountService.fetchAccountDetails(mobileNumber);
         return ResponseEntity.status(HttpStatus.OK).body(customerDto);
     }
 
+    @Operation(
+            summary = "Update account details",
+            description = "Updates customer and account information. Returns 200 on success or 500 if the update fails."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Account updated successfully",
+                    content = @Content(schema = @Schema(implementation = ResponseDto.class))),
+            @ApiResponse(responseCode = "400", description = "Invalid input data",
+                    content = @Content(schema = @Schema(implementation = ErrorResponseDto.class))),
+            @ApiResponse(responseCode = "404", description = "Customer or account not found",
+                    content = @Content(schema = @Schema(implementation = ErrorResponseDto.class))),
+            @ApiResponse(responseCode = "500", description = "Update failed due to an internal error",
+                    content = @Content(schema = @Schema(implementation = ErrorResponseDto.class)))
+    })
     @PutMapping("/update")
     public ResponseEntity<ResponseDto> updateAccountDetails(
             @RequestBody @Valid CustomerDto customerDto
@@ -66,8 +116,23 @@ public class AccountController {
         }
     }
 
+    @Operation(
+            summary = "Delete a bank account",
+            description = "Deletes the customer and associated account by mobile number. Returns 204 on success."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "204", description = "Account deleted successfully",
+                    content = @Content(schema = @Schema(implementation = ResponseDto.class))),
+            @ApiResponse(responseCode = "400", description = "Invalid mobile number format",
+                    content = @Content(schema = @Schema(implementation = ErrorResponseDto.class))),
+            @ApiResponse(responseCode = "404", description = "Customer or account not found",
+                    content = @Content(schema = @Schema(implementation = ErrorResponseDto.class))),
+            @ApiResponse(responseCode = "500", description = "Deletion failed due to an internal error",
+                    content = @Content(schema = @Schema(implementation = ErrorResponseDto.class)))
+    })
     @DeleteMapping("/delete")
     public ResponseEntity<ResponseDto> deleteAccount(
+            @Parameter(description = "Customer mobile number (exactly 10 digits)", example = "1234567890")
             @RequestParam @Valid @Pattern(regexp = "\\d{10}", message = "Mobile number must be 10 digits") String mobileNumber
     ) {
         boolean isDeleted = accountService.deleteAccount(mobileNumber);
