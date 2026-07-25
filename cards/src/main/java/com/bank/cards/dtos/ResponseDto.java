@@ -11,12 +11,14 @@ import lombok.Builder;
 public record ResponseDto(
 
         @Schema(
-                description = "Status code in the response"
+                description = "Status code in the response",
+                example = "201"
         )
         String statusCode,
 
         @Schema(
-                description = "Status message in the response"
+                description = "Status message in the response",
+                example = "Card created successfully"
         )
         String statusMsg
 

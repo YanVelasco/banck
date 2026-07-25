@@ -14,22 +14,26 @@ import java.time.LocalDateTime;
 public record ErrorResponseDto(
 
         @Schema(
-                description = "API path invoked by client"
+                description = "API path invoked by client",
+                example = "/api/fetch"
         )
         String apiPath,
 
         @Schema(
-                description = "Error code representing the error happened"
+                description = "HTTP status code representing the error",
+                example = "404"
         )
         HttpStatus errorCode,
 
         @Schema(
-                description = "Error message representing the error happened"
+                description = "Error message describing what went wrong",
+                example = "Card not found with the given mobile number"
         )
         String errorMessage,
 
         @Schema(
-                description = "Time representing when the error happened"
+                description = "Timestamp of when the error occurred",
+                example = "2024-01-15T10:30:00"
         )
         LocalDateTime errorTime
 
