@@ -1,0 +1,20 @@
+server:
+  port: 8090
+spring:
+  application:
+    name: loans
+  datasource:
+    url: jdbc:h2:mem:testdbloans
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: ''
+  h2:
+    console:
+      enabled: true
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
