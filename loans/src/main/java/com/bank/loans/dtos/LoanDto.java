@@ -5,8 +5,10 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
+import lombok.Builder;
 
 @Schema(name = "LoanDto", description = "Data transfer object for loan information")
+@Builder
 public record LoanDto(
 
         @Schema(description = "10-digit mobile number of the customer", example = "1234567890")
@@ -26,6 +28,10 @@ public record LoanDto(
         @Positive(message = "Total loan amount must be zero or positive")
         @Schema(description = "Total loan amount", example = "50000")
         int totalLoan,
+
+        @PositiveOrZero(message = "Total loan amount paid should be equal or greater than zero")
+        @Schema(description = "Total loan amount paid", example = "1000")
+        int amountPaid,
 
         @PositiveOrZero(message = "Outstanding amount must be zero or positive")
         @Schema(description = "Outstanding loan amount", example = "20000")

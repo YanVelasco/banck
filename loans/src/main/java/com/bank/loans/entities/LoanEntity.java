@@ -28,6 +28,9 @@ public class LoanEntity extends BaseEntity implements Serializable {
     @Column(name = "mobile_number", nullable = false)
     private String mobileNumber;
 
+    @Column(name = "loan_number", nullable = false, unique = true)
+    private Long loanNumber;
+
     @Column(name = "loan_type", nullable = false)
     private String loanType;
 
