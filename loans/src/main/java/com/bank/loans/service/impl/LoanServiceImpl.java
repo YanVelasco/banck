@@ -24,9 +24,10 @@ public class LoanServiceImpl implements ILoanService {
 
     @Override
     public void createLoan(String mobileNumber) {
-        loanRepository.findByMobileNumber(mobileNumber)
-                .orElseThrow(() -> new AlreadyExistsException("Loan already exists for mobile number: " + mobileNumber));
-        
+        if (loanRepository.findByMobileNumber(mobileNumber).isPresent()) {
+            throw new AlreadyExistsException("Loan already exists for mobile number: " + mobileNumber);
+        }
+
         loanRepository.save(newLoan(mobileNumber));
     }
 
@@ -54,7 +55,7 @@ public class LoanServiceImpl implements ILoanService {
     public boolean updateLoan(LoanDto loanDto) {
         LoanEntity loan = loanRepository.findByLoanNumber(Long.valueOf(loanDto.loanNumber())).orElseThrow(
                 () -> new NotFoundException("Loan not found for loan number: " + loanDto.loanNumber()));
-        LoanMapper.mapToLoanEntity(loanDto);
+        LoanMapper.mapToLoanEntity(loanDto, loan);
         loanRepository.save(loan);
         return  true;
     }
@@ -62,7 +63,7 @@ public class LoanServiceImpl implements ILoanService {
     private Long generateUniqueLoanNumber() {
         long number;
         do {
-            number = ThreadLocalRandom.current().nextLong(1_000_000_000L, 10_000_000_000L);
+            number = ThreadLocalRandom.current().nextLong(100_000_000_000L, 1_000_000_000_000L);
         } while (loanRepository.existsByLoanNumber(number));
         return number;
     }
@@ -72,7 +73,7 @@ public class LoanServiceImpl implements ILoanService {
         LoanEntity loan = loanRepository.findByMobileNumber(mobileNumber).orElseThrow(
                 () -> new NotFoundException("Loan not found for mobile number: " + mobileNumber)
         );
-        loanRepository.deleteById(loan.getLoanNumber());
+        loanRepository.deleteById(loan.getLoanId());
         return true;
     }
 

@@ -16,14 +16,12 @@ public class LoanMapper {
                 .build();
     }
 
-    public static void mapToLoanEntity(LoanDto loanDto) {
-        LoanEntity.builder()
-                .loanNumber(Long.valueOf(loanDto.loanNumber()))
-                .loanType(loanDto.loanType())
-                .mobileNumber(loanDto.mobileNumber())
-                .totalLoan(loanDto.totalLoan())
-                .amountPaid(loanDto.amountPaid())
-                .outstandingAmount(loanDto.outstandingAmount())
-                .build();
+    public static void mapToLoanEntity(LoanDto loanDto, LoanEntity loanEntity) {
+        loanEntity.setLoanNumber(Long.valueOf(loanDto.loanNumber()));
+        loanEntity.setLoanType(loanDto.loanType());
+        loanEntity.setMobileNumber(loanDto.mobileNumber());
+        loanEntity.setTotalLoan(loanDto.totalLoan());
+        loanEntity.setAmountPaid(loanDto.amountPaid());
+        loanEntity.setOutstandingAmount(loanDto.outstandingAmount());
     }
 }
