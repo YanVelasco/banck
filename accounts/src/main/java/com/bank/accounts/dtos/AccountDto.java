@@ -15,5 +15,6 @@ public record AccountDto(
 
         @NotBlank(message = "Branch name cannot be empty")
         String branchAddress
+
 ) {
 }

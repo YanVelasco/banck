@@ -13,9 +13,11 @@ public record CustomerDto(
         @Size(min = 5, max = 30, message = "Name must be between 5 and 30 characters")
         String name,
 
+        @NotBlank(message = "Email cannot be empty")
         @Email(message = "Email should be valid")
         String email,
 
+        @NotBlank(message = "Mobile number cannot be empty")
         @Pattern(regexp = "\\d{10}", message = "Mobile number must be 10 digits")
         String mobileNumber,
 
