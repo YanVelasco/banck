@@ -1,0 +1,16 @@
+spring:
+  config:
+    activate:
+      on-profile: qa
+
+build:
+  version: 2.0
+
+accounts:
+  message: Welcome to the Accounts Service related to QA APIs!
+  contactDetails:
+    name: Accounts Service
+    email: support@accounts.com
+  onCallSupport:
+    - +1-800-123-4567
+    - +1-800-987-6543

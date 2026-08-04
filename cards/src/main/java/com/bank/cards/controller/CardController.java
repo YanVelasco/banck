@@ -1,5 +1,6 @@
 package com.bank.cards.controller;
 
+import com.bank.cards.dtos.CardContactInfoDto;
 import com.bank.cards.dtos.CardDto;
 import com.bank.cards.dtos.ErrorResponseDto;
 import com.bank.cards.dtos.ResponseDto;
@@ -14,6 +15,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Pattern;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.env.Environment;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -27,9 +30,17 @@ import org.springframework.web.bind.annotation.*;
 public class CardController {
 
     private final ICardService iCardService;
+    private final CardContactInfoDto cardContactInfoDto;
 
-    public CardController(ICardService iCardService) {
+    @Value("${build.version}")
+    private String buildVersion;
+
+    private final Environment environment;
+
+    public CardController(ICardService iCardService, CardContactInfoDto cardContactInfoDto, Environment environment) {
         this.iCardService = iCardService;
+        this.cardContactInfoDto = cardContactInfoDto;
+        this.environment = environment;
     }
 
     @Operation(
@@ -170,6 +181,51 @@ public class CardController {
                                     .build()
                     );
         }
+    }
+
+    @Operation(
+            summary = "Get build information",
+            description = "Returns the build version of the application."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Build version retrieved successfully",
+                    content = @Content(schema = @Schema(implementation = String.class))),
+            @ApiResponse(responseCode = "500", description = "Failed to retrieve build version",
+                    content = @Content(schema = @Schema(implementation = ErrorResponseDto.class)))
+    })
+    @GetMapping("/build-info")
+    public ResponseEntity<String> getBuildVersion() {
+        return ResponseEntity.status(HttpStatus.OK).body(buildVersion);
+    }
+
+    @Operation(
+            summary = "Get Java version",
+            description = "Returns the Java version used to run the application."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Java version retrieved successfully",
+                    content = @Content(schema = @Schema(implementation = String.class))),
+            @ApiResponse(responseCode = "500", description = "Failed to retrieve Java version",
+                    content = @Content(schema = @Schema(implementation = ErrorResponseDto.class)))
+    })
+    @GetMapping("/java-version")
+    public ResponseEntity<String> getJavaVersion() {
+        return ResponseEntity.status(HttpStatus.OK).body(environment.getProperty("JAVA_HOME"));
+    }
+
+    @Operation(
+            summary = "Get card contact information",
+            description = "Returns the contact information for the card."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Card contact information retrieved successfully",
+                    content = @Content(schema = @Schema(implementation = CardContactInfoDto.class))),
+            @ApiResponse(responseCode = "500", description = "Failed to retrieve card contact information",
+                    content = @Content(schema = @Schema(implementation = ErrorResponseDto.class)))
+    })
+    @GetMapping("/contact-info")
+    public ResponseEntity<CardContactInfoDto> getContactInfo() {
+        return ResponseEntity.status(HttpStatus.OK).body(cardContactInfoDto);
     }
 
 }

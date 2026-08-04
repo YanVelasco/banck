@@ -1,11 +1,14 @@
 package com.bank.cards;
 
+import com.bank.cards.dtos.CardContactInfoDto;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 
 @SpringBootApplication
 @EnableJpaAuditing(auditorAwareRef = "auditorAwareImpl")
+@EnableConfigurationProperties(CardContactInfoDto .class)
 public class CardsApplication {
 
     public static void main(String[] args) {

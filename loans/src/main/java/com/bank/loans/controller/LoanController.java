@@ -2,6 +2,7 @@ package com.bank.loans.controller;
 
 import com.bank.loans.dtos.ErrorResponseDto;
 import com.bank.loans.dtos.LoanDto;
+import com.bank.loans.dtos.LoansContactInfoDto;
 import com.bank.loans.dtos.ResponseDto;
 import com.bank.loans.enums.LoanConstantsEnum;
 import com.bank.loans.service.ILoanService;
@@ -14,6 +15,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Pattern;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.env.Environment;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -27,9 +30,17 @@ import org.springframework.web.bind.annotation.*;
 public class LoanController {
 
     private final ILoanService iloanService;
+    private final LoansContactInfoDto loansContactInfoDto;
 
-    public LoanController(ILoanService iloanService) {
+    @Value("${build.version}")
+    private String buildVersion;
+
+    private final Environment environment;
+
+    public LoanController(ILoanService iloanService, LoansContactInfoDto loansContactInfoDto, Environment environment) {
         this.iloanService = iloanService;
+        this.loansContactInfoDto = loansContactInfoDto;
+        this.environment = environment;
     }
 
     @Operation(
@@ -149,6 +160,51 @@ public class LoanController {
                     .status(HttpStatus.EXPECTATION_FAILED)
                     .body(new ResponseDto(LoanConstantsEnum.STATUS_417.getValue(), LoanConstantsEnum.MESSAGE_417_DELETE.getValue()));
         }
+    }
+
+    @Operation(
+            summary = "Get build information",
+            description = "Returns the build version of the application."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Build version retrieved successfully",
+                    content = @Content(schema = @Schema(implementation = String.class))),
+            @ApiResponse(responseCode = "500", description = "Failed to retrieve build version",
+                    content = @Content(schema = @Schema(implementation = ErrorResponseDto.class)))
+    })
+    @GetMapping("/build-info")
+    public ResponseEntity<String> getBuildVersion() {
+        return ResponseEntity.status(HttpStatus.OK).body(buildVersion);
+    }
+
+    @Operation(
+            summary = "Get Java version",
+            description = "Returns the Java version used to run the application."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Java version retrieved successfully",
+                    content = @Content(schema = @Schema(implementation = String.class))),
+            @ApiResponse(responseCode = "500", description = "Failed to retrieve Java version",
+                    content = @Content(schema = @Schema(implementation = ErrorResponseDto.class)))
+    })
+    @GetMapping("/java-version")
+    public ResponseEntity<String> getJavaVersion() {
+        return ResponseEntity.status(HttpStatus.OK).body(environment.getProperty("JAVA_HOME"));
+    }
+
+    @Operation(
+            summary = "Get loans contact information",
+            description = "Returns the contact information for the loans."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Loans contact information retrieved successfully",
+                    content = @Content(schema = @Schema(implementation = LoansContactInfoDto.class))),
+            @ApiResponse(responseCode = "500", description = "Failed to retrieve loans contact information",
+                    content = @Content(schema = @Schema(implementation = ErrorResponseDto.class)))
+    })
+    @GetMapping("/contact-info")
+    public ResponseEntity<LoansContactInfoDto> getContactInfo() {
+        return ResponseEntity.status(HttpStatus.OK).body(loansContactInfoDto);
     }
 
 }
