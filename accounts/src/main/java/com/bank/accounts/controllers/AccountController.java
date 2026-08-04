@@ -14,6 +14,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Pattern;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -27,6 +28,9 @@ import org.springframework.web.bind.annotation.*;
 public class AccountController {
 
     private final IAccountService accountService;
+
+    @Value("${build.version}")
+    private String buildVersion;
 
     public AccountController(IAccountService accountService) {
         this.accountService = accountService;
@@ -151,4 +155,20 @@ public class AccountController {
             );
         }
     }
+
+    @Operation(
+            summary = "Get build information",
+            description = "Returns the build version of the application."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Build version retrieved successfully",
+                    content = @Content(schema = @Schema(implementation = String.class))),
+            @ApiResponse(responseCode = "500", description = "Failed to retrieve build version",
+                    content = @Content(schema = @Schema(implementation = ErrorResponseDto.class)))
+    })
+    @GetMapping("/build-info")
+    public ResponseEntity<String> getBuildVersion() {
+        return ResponseEntity.status(HttpStatus.OK).body(buildVersion);
+    }
+
 }
