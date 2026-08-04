@@ -1,5 +1,6 @@
 package com.bank.accounts.controllers;
 
+import com.bank.accounts.dtos.AccountContactInfoDto;
 import com.bank.accounts.dtos.CustomerDto;
 import com.bank.accounts.dtos.ErrorResponseDto;
 import com.bank.accounts.dtos.ResponseDto;
@@ -29,14 +30,16 @@ import org.springframework.web.bind.annotation.*;
 public class AccountController {
 
     private final IAccountService accountService;
+    private final AccountContactInfoDto accountContactInfoDto;
 
     @Value("${build.version}")
     private String buildVersion;
 
     private final Environment environment;
 
-    public AccountController(IAccountService accountService, Environment environment) {
+    public AccountController(IAccountService accountService, AccountContactInfoDto accountContactInfoDto, Environment environment) {
         this.accountService = accountService;
+        this.accountContactInfoDto = accountContactInfoDto;
         this.environment = environment;
     }
 
@@ -188,6 +191,21 @@ public class AccountController {
     @GetMapping("/java-version")
     public ResponseEntity<String> getJavaVersion() {
         return ResponseEntity.status(HttpStatus.OK).body(environment.getProperty("JAVA_HOME"));
+    }
+
+    @Operation(
+            summary = "Get account contact information",
+            description = "Returns the contact information for the account."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Account contact information retrieved successfully",
+                    content = @Content(schema = @Schema(implementation = AccountContactInfoDto.class))),
+            @ApiResponse(responseCode = "500", description = "Failed to retrieve account contact information",
+                    content = @Content(schema = @Schema(implementation = ErrorResponseDto.class)))
+    })
+    @GetMapping("/contact-info")
+    public ResponseEntity<AccountContactInfoDto> getContactInfo() {
+        return ResponseEntity.status(HttpStatus.OK).body(accountContactInfoDto);
     }
 
 }
