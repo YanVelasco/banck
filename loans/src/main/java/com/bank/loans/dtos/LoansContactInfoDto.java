@@ -6,14 +6,14 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import java.util.List;
 import java.util.Map;
 
-@Schema(name = "CardContactInfo", description = "Contact information for card-related inquiries")
-@ConfigurationProperties(prefix = "cards")
+@Schema(name = "LoansContactInfo", description = "Contact information for loans-related inquiries")
+@ConfigurationProperties(prefix = "loans")
 public record LoansContactInfoDto(
 
-        @Schema(description = "Message to be displayed for card-related inquiries", example = "For any card-related inquiries, please contact our support team.")
+        @Schema(description = "Message to be displayed for loans-related inquiries", example = "For any loans-related inquiries, please contact our support team.")
         String message,
 
-        @Schema(description = "Contact details for card-related inquiries", example = "{\"name\": \"Cards Service\", \"email\": \"support@cards.com\"}")
+        @Schema(description = "Contact details for loans-related inquiries", example = "{\"name\": \"Loans Service\", \"email\": \"support@loans.com\"}")
         Map<String, String> contactDetails,
 
         @Schema(description = "On-call support phone numbers", example = "[\"+1-800-123-4567\", \"+1-800-987-6543\"]")
