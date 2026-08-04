@@ -15,6 +15,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Pattern;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.env.Environment;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -32,8 +33,11 @@ public class AccountController {
     @Value("${build.version}")
     private String buildVersion;
 
-    public AccountController(IAccountService accountService) {
+    private final Environment environment;
+
+    public AccountController(IAccountService accountService, Environment environment) {
         this.accountService = accountService;
+        this.environment = environment;
     }
 
     @Operation(
@@ -169,6 +173,21 @@ public class AccountController {
     @GetMapping("/build-info")
     public ResponseEntity<String> getBuildVersion() {
         return ResponseEntity.status(HttpStatus.OK).body(buildVersion);
+    }
+
+    @Operation(
+            summary = "Get Java version",
+            description = "Returns the Java version used to run the application."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Java version retrieved successfully",
+                    content = @Content(schema = @Schema(implementation = String.class))),
+            @ApiResponse(responseCode = "500", description = "Failed to retrieve Java version",
+                    content = @Content(schema = @Schema(implementation = ErrorResponseDto.class)))
+    })
+    @GetMapping("/java-version")
+    public ResponseEntity<String> getJavaVersion() {
+        return ResponseEntity.status(HttpStatus.OK).body(environment.getProperty("JAVA_HOME"));
     }
 
 }
