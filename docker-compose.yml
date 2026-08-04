@@ -1,0 +1,49 @@
+services:
+  accounts:
+    image: yanvelasco/accounts:v1
+    container_name: accounts
+    ports:
+      - "8080:8080"
+    deploy:
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+    networks:
+      - bank-network
+  loans:
+    image: yanvelasco/loans:v1
+    container_name: loans
+    ports:
+      - "8090:8090"
+    deploy:
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 768M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+    networks:
+      - bank-network
+  cards:
+    image: yanvelasco/cards:v1
+    container_name: cards
+    ports:
+      - "9000:9000"
+    deploy:
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+    networks:
+      - bank-network
+networks:
+  bank-network:
+    driver: bridge
