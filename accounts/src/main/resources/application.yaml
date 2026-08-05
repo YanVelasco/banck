@@ -8,7 +8,7 @@ spring:
       - "optional:configserver:http://localhost:8071/"
   profiles:
     active:
-      - prod
+      - qa
   datasource:
     url: jdbc:h2:mem:testdbaccounts
     driver-class-name: org.h2.Driver
