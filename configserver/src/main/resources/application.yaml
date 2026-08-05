@@ -5,10 +5,10 @@ spring:
     name: configserver
   profiles:
     active:
-      - native
+      - git
   cloud:
     config:
       server:
-        native:
-          search-locations:
-            - "classpath:/configs"
+        git:
+          uri: https://github.com/YanVelasco/bank-config
+          username: yanvelasco
