@@ -1,15 +1,14 @@
 server:
   port: 9000
 spring:
+  application:
+    name: cards
+  config:
+    import:
+      - "optional:configserver:http://localhost:8071/"
   profiles:
     active:
       - qa
-  config:
-    import:
-      - application_qa.yml
-      - application_prod.yml
-  application:
-    name: cards
   datasource:
     url: jdbc:h2:mem:testdbcards
     driverClassName: org.h2.Driver
@@ -23,15 +22,3 @@ spring:
     hibernate:
       ddl-auto: update
     show-sql: true
-
-build:
-  version: 3.0
-
-cards:
-  message: Welcome to the Cards Service!
-  contactDetails:
-    name: Cards Service
-    email: support@cards.com
-  onCallSupport:
-    - +1-800-123-4567
-    - +1-800-987-6543
