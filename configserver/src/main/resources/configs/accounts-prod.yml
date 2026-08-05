@@ -1,0 +1,11 @@
+build:
+  version: 1.0
+
+accounts:
+  message: Welcome to the Accounts Service related to Production APIs!
+  contactDetails:
+    name: Accounts Service
+    email: support@accounts.com
+  onCallSupport:
+    - +1-800-123-4567
+    - +1-800-987-6543

@@ -1,0 +1,11 @@
+build:
+  version: 3.0
+
+loans:
+  message: Welcome to the Loans Service!
+  contactDetails:
+    name: Loans Service
+    email: support@loans.com
+  onCallSupport:
+    - +1-800-123-4567
+    - +1-800-987-6543

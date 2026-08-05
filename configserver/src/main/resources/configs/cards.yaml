@@ -1,0 +1,11 @@
+build:
+  version: 3.0
+
+cards:
+  message: Welcome to the Cards Service!
+  contactDetails:
+    name: Cards Service
+    email: support@cards.com
+  onCallSupport:
+    - +1-800-123-4567
+    - +1-800-987-6543
