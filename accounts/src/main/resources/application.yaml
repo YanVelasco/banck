@@ -1,15 +1,14 @@
 server:
   port: 8080
 spring:
-  profiles:
-    active:
-      - qa
-  config:
-    import:
-      - application_qa.yml
-      - application_prod.yml
   application:
     name: accounts
+  config:
+    import:
+      - "optional:configserver:http://localhost:8071/"
+  profiles:
+    active:
+      - prod
   datasource:
     url: jdbc:h2:mem:testdbaccounts
     driver-class-name: org.h2.Driver
@@ -25,15 +24,3 @@ spring:
     properties:
       hibernate:
         format_sql: true
-
-build:
-  version: 3.0
-
-accounts:
-  message: Welcome to the Accounts Service!
-  contactDetails:
-    name: Accounts Service
-    email: support@accounts.com
-  onCallSupport:
-    - +1-800-123-4567
-    - +1-800-987-6543
