@@ -166,7 +166,7 @@
                 <version>3.5.2</version>
                 <configuration>
                     <to>
-                        <image>yanvelasco/${project.artifactId}:v1</image>
+                        <image>yanvelasco/${project.artifactId}:v2</image>
                     </to>
                 </configuration>
             </plugin>

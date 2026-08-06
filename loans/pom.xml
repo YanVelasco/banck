@@ -118,7 +118,7 @@
                 <configuration>
                     <image>
                         <name>
-                            yanvelasco/${project.artifactId}:v1
+                            yanvelasco/${project.artifactId}:v2
                         </name>
                     </image>
                     <excludes>
