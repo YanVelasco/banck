@@ -1,0 +1,121 @@
+services:
+  rabbitmq:
+    image: rabbitmq:4.2.3-management-alpine
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+    networks:
+      - bank-network
+
+  config-server:
+    image: yanvelasco/config-server:v1
+    ports:
+      - "8071:8071"
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl --fail --silent http://localhost:8071/actuator/health | grep UP || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+    networks:
+      - bank-network
+    environment:
+      - SPRING_RABBITMQ_HOST=rabbitmq
+
+  accounts:
+    image: yanvelasco/accounts:v2
+    ports:
+      - "8080:8080"
+    depends_on:
+      config-server:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+    networks:
+      - bank-network
+    environment:
+      - SPRING_APPLICATION_NAME=accounts
+      - SPRING_CONFIG_IMPORT=configserver:http://config-server:8071/
+      - SPRING_PROFILES_ACTIVE=qa
+      - SPRING_RABBITMQ_HOST=rabbitmq
+
+  loans:
+    image: yanvelasco/loans:v2
+    ports:
+      - "8090:8090"
+    depends_on:
+      config-server:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 768M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+    networks:
+      - bank-network
+    environment:
+      - SPRING_APPLICATION_NAME=loans
+      - SPRING_CONFIG_IMPORT=configserver:http://config-server:8071/
+      - SPRING_PROFILES_ACTIVE=qa
+      - SPRING_RABBITMQ_HOST=rabbitmq
+
+  cards:
+    image: yanvelasco/cards:v2
+    ports:
+      - "9000:9000"
+    depends_on:
+      config-server:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+    networks:
+      - bank-network
+    environment:
+      - SPRING_APPLICATION_NAME=cards
+      - SPRING_CONFIG_IMPORT=configserver:http://config-server:8071/
+      - SPRING_PROFILES_ACTIVE=qa
+      - SPRING_RABBITMQ_HOST=rabbitmq
+
+networks:
+  bank-network:
+    driver: bridge
