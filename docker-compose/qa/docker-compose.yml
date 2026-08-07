@@ -1,4 +1,88 @@
 services:
+  mysql-accounts:
+    image: mysql:8.4
+    container_name: mysql-accounts
+    environment:
+      - MYSQL_ROOT_PASSWORD=root
+      - MYSQL_DATABASE=accountsdb
+      - MYSQL_USER=bank
+      - MYSQL_PASSWORD=bank
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-accounts-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot"]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+    networks:
+      - bank-network
+  mysql-loans:
+    image: mysql:8.4
+    container_name: mysql-loans
+    environment:
+      - MYSQL_ROOT_PASSWORD=root
+      - MYSQL_DATABASE=loansdb
+      - MYSQL_USER=bank
+      - MYSQL_PASSWORD=bank
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql-loans-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot"]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+    networks:
+      - bank-network
+  mysql-cards:
+    image: mysql:8.4
+    container_name: mysql-cards
+    environment:
+      - MYSQL_ROOT_PASSWORD=root
+      - MYSQL_DATABASE=cardsdb
+      - MYSQL_USER=bank
+      - MYSQL_PASSWORD=bank
+    ports:
+      - "3308:3306"
+    volumes:
+      - mysql-cards-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot"]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+    networks:
+      - bank-network
   rabbitmq:
     image: rabbitmq:4.2.3-management-alpine
     ports:
@@ -54,6 +138,8 @@ services:
     depends_on:
       config-server:
         condition: service_healthy
+      mysql-accounts:
+        condition: service_healthy
     deploy:
       resources:
         limits:
@@ -69,13 +155,19 @@ services:
       - SPRING_CONFIG_IMPORT=configserver:http://config-server:8071/
       - SPRING_PROFILES_ACTIVE=qa
       - SPRING_RABBITMQ_HOST=rabbitmq
-
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql-accounts:3306/accountsdb
+      - SPRING_DATASOURCE_USERNAME=bank
+      - SPRING_DATASOURCE_PASSWORD=bank
+      - SPRING_DATASOURCE_DRIVER_CLASS_NAME=com.mysql.cj.jdbc.Driver
+      - SPRING_JPA_DATABASE_PLATFORM=org.hibernate.dialect.MySQLDialect
   loans:
     image: yanvelasco/loans:v2
     ports:
       - "8090:8090"
     depends_on:
       config-server:
+        condition: service_healthy
+      mysql-loans:
         condition: service_healthy
     deploy:
       resources:
@@ -92,13 +184,19 @@ services:
       - SPRING_CONFIG_IMPORT=configserver:http://config-server:8071/
       - SPRING_PROFILES_ACTIVE=qa
       - SPRING_RABBITMQ_HOST=rabbitmq
-
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql-loans:3306/loansdb
+      - SPRING_DATASOURCE_USERNAME=bank
+      - SPRING_DATASOURCE_PASSWORD=bank
+      - SPRING_DATASOURCE_DRIVER_CLASS_NAME=com.mysql.cj.jdbc.Driver
+      - SPRING_JPA_DATABASE_PLATFORM=org.hibernate.dialect.MySQLDialect
   cards:
     image: yanvelasco/cards:v2
     ports:
       - "9000:9000"
     depends_on:
       config-server:
+        condition: service_healthy
+      mysql-cards:
         condition: service_healthy
     deploy:
       resources:
@@ -115,7 +213,17 @@ services:
       - SPRING_CONFIG_IMPORT=configserver:http://config-server:8071/
       - SPRING_PROFILES_ACTIVE=qa
       - SPRING_RABBITMQ_HOST=rabbitmq
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql-cards:3306/cardsdb
+      - SPRING_DATASOURCE_USERNAME=bank
+      - SPRING_DATASOURCE_PASSWORD=bank
+      - SPRING_DATASOURCE_DRIVER_CLASS_NAME=com.mysql.cj.jdbc.Driver
+      - SPRING_JPA_DATABASE_PLATFORM=org.hibernate.dialect.MySQLDialect
 
 networks:
   bank-network:
     driver: bridge
+
+volumes:
+  mysql-accounts-data:
+  mysql-loans-data:
+  mysql-cards-data:
