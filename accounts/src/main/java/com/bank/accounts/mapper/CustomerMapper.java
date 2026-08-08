@@ -1,9 +1,13 @@
 package com.bank.accounts.mapper;
 
 import com.bank.accounts.dtos.AccountDto;
+import com.bank.accounts.dtos.CardDto;
+import com.bank.accounts.dtos.CustomerDetailsDto;
 import com.bank.accounts.dtos.CustomerDto;
+import com.bank.accounts.dtos.LoanDto;
 import com.bank.accounts.entities.AccountEntity;
 import com.bank.accounts.entities.CustomerEntity;
+import org.springframework.http.ResponseEntity;
 
 public class CustomerMapper {
 
@@ -33,4 +37,20 @@ public class CustomerMapper {
         customerEntity.setEmail(customerDto.email());
         customerEntity.setMobileNumber(customerDto.mobileNumber());
     }
+
+    public static CustomerDetailsDto toCustomerDetailsDto(CustomerEntity customerEntity, AccountEntity account, ResponseEntity<LoanDto> loanDto, ResponseEntity<CardDto> cardDto) {
+        return CustomerDetailsDto.builder()
+                .name(customerEntity.getName())
+                .email(customerEntity.getEmail())
+                .mobileNumber(customerEntity.getMobileNumber())
+                .accountDto(AccountDto.builder()
+                        .accountNumber(account.getAccountNumber())
+                        .accountType(account.getAccountType())
+                        .branchAddress(account.getBranchAddress())
+                        .build())
+                .loanDto(loanDto.getBody())
+                .cardDto(cardDto.getBody())
+                .build();
+    }
+
 }
