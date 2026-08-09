@@ -4,28 +4,3 @@ spring:
   config:
     import:
       - "optional:configserver:http://localhost:8071/"
-
-management:
-  endpoints:
-    web:
-      exposure:
-        include: "*"
-  endpoint:
-    shutdown:
-      access: unrestricted
-  info:
-    env:
-      enabled: true
-
-eureka:
-  client:
-    service-url:
-      defaultZone: http://localhost:8070/eureka/
-  instance:
-    hostname: localhost
-
-info:
-  app:
-    name: gatewayserver
-    description: Gateway Server
-    version: 1.0.0
