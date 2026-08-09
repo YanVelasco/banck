@@ -47,10 +47,3 @@ info:
     name: accounts
     description: Accounts Service
     version: 1.0.0
-
-feign:
-  client:
-    cards:
-        url: http://localhost:9000/api
-    loans:
-        url: http://localhost:8090/api

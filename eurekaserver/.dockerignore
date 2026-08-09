@@ -1,0 +1,13 @@
+target/
+.git/
+.idea/
+*.iml
+.mvn/
+mvnw
+mvnw.cmd
+
+src/test/
+
+.gitattributes
+.gitignore
+README*
