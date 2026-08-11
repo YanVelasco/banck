@@ -13,20 +13,21 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Pattern;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @Tag(name = "Customer Management", description = "REST APIs for fetching and managing customer details, accounts, loans, and cards")
 @RestController
 @RequestMapping(path = "/api", produces = {MediaType.APPLICATION_JSON_VALUE})
 @Validated
 public class CustomerController {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(CustomerController.class);
 
     private final ICustomerService customerService;
 
@@ -50,10 +51,12 @@ public class CustomerController {
     })
     @GetMapping("/customer/details")
     public ResponseEntity<CustomerDetailsDto> fetchCustomerDetails(
+            @RequestHeader("bank-correlation-id") String correlationId,
             @Parameter(description = "Customer mobile number (exactly 10 digits)", example = "1234567890")
             @RequestParam @Valid @Pattern(regexp = "\\d{10}", message = "Mobile number must be 10 digits") String mobileNumber
     ) {
-        var customerDetails = customerService.getCustomerDetailsByMobileNumber(mobileNumber);
+        LOGGER.debug("Correlation ID: {} - Fetching customer details for mobile number: {}", correlationId, mobileNumber);
+        var customerDetails = customerService.getCustomerDetailsByMobileNumber(mobileNumber, correlationId);
         return ResponseEntity.status(HttpStatus.OK).body(customerDetails);
     }
 

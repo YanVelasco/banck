@@ -12,3 +12,9 @@ spring:
             locator:
               enabled: false
               lower-case-service-id: true
+
+logging:
+  level:
+    com:
+      bank:
+        gatewayserver: DEBUG

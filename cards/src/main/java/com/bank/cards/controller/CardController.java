@@ -15,6 +15,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Pattern;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.env.Environment;
 import org.springframework.http.HttpStatus;
@@ -31,6 +33,7 @@ public class CardController {
 
     private final ICardService iCardService;
     private final CardContactInfoDto cardContactInfoDto;
+    private static final Logger LOGGER = LoggerFactory.getLogger(CardController.class);
 
     @Value("${build.version}")
     private String buildVersion;
@@ -90,11 +93,13 @@ public class CardController {
     })
     @GetMapping("/fetch")
     public ResponseEntity<CardDto> fetchCardDetails(
+            @RequestHeader("bank-correlation-id") String correlationId,
             @Parameter(description = "Customer mobile number (exactly 10 digits)", example = "1234567890")
             @RequestParam
             @Pattern(regexp = "(^$|[0-9]{10})", message = "Mobile number must be 10 digits")
             String mobileNumber
     ) {
+        LOGGER.debug("Fetching card details for mobile number: {} with correlation ID: {}", mobileNumber, correlationId);
         CardDto cardDto = iCardService.fetchCard(mobileNumber);
         return ResponseEntity.status(HttpStatus.OK).body(cardDto);
     }
@@ -118,7 +123,7 @@ public class CardController {
     @PutMapping("/update")
     public ResponseEntity<ResponseDto> updateCardDetails(@Valid @RequestBody CardDto cardsDto) {
         boolean isUpdated = iCardService.updateCard(cardsDto);
-        if(isUpdated) {
+        if (isUpdated) {
             return ResponseEntity
                     .status(HttpStatus.OK)
                     .body(
@@ -127,7 +132,7 @@ public class CardController {
                                     .statusMsg(CardsConstantsEnum.MESSAGE_200.getValue())
                                     .build()
                     );
-        }else{
+        } else {
             return ResponseEntity
                     .status(HttpStatus.EXPECTATION_FAILED)
                     .body(
@@ -159,10 +164,10 @@ public class CardController {
     public ResponseEntity<ResponseDto> deleteCardDetails(
             @Parameter(description = "Customer mobile number (exactly 10 digits)", example = "1234567890")
             @RequestParam
-            @Pattern(regexp="(^$|[0-9]{10})",message = "Mobile number must be 10 digits")
+            @Pattern(regexp = "(^$|[0-9]{10})", message = "Mobile number must be 10 digits")
             String mobileNumber) {
         boolean isDeleted = iCardService.deleteCard(mobileNumber);
-        if(isDeleted) {
+        if (isDeleted) {
             return ResponseEntity
                     .status(HttpStatus.OK)
                     .body(
@@ -171,7 +176,7 @@ public class CardController {
                                     .statusMsg(CardsConstantsEnum.MESSAGE_200.getValue())
                                     .build()
                     );
-        }else{
+        } else {
             return ResponseEntity
                     .status(HttpStatus.EXPECTATION_FAILED)
                     .body(

@@ -47,3 +47,9 @@ info:
     name: accounts
     description: Accounts Service
     version: 1.0.0
+
+logging:
+  level:
+    com:
+      bank:
+        accounts: DEBUG

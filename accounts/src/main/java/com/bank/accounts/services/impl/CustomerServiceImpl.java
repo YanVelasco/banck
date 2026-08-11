@@ -29,15 +29,15 @@ public class CustomerServiceImpl implements ICustomerService {
     }
 
     @Override
-    public CustomerDetailsDto getCustomerDetailsByMobileNumber(String mobileNumber) {
+    public CustomerDetailsDto getCustomerDetailsByMobileNumber(String mobileNumber, String correlationId) {
         var customerEntity = customerRepository.findByMobileNumber(mobileNumber)
                 .orElseThrow(() -> new NotFoundException("Customer with mobile number " + mobileNumber + " not found."));
         var account = accountRepository.findByCustomerId(customerEntity.getCustomerId())
                 .orElseThrow(() -> new NotFoundException("Account for customer with mobile number " + mobileNumber + " not found."));
 
-        ResponseEntity<LoanDto> loanDto = loansFeignClient.fetchLoanDetails(mobileNumber);
+        ResponseEntity<LoanDto> loanDto = loansFeignClient.fetchLoanDetails(correlationId, mobileNumber);
 
-        ResponseEntity<CardDto> cardDto = cardsFeignClient.fetchCardDetails(mobileNumber);
+        ResponseEntity<CardDto> cardDto = cardsFeignClient.fetchCardDetails(correlationId, mobileNumber);
 
         return CustomerMapper.toCustomerDetailsDto(customerEntity, account, loanDto, cardDto);
     }

@@ -57,7 +57,7 @@ public class LoanServiceImpl implements ILoanService {
                 () -> new NotFoundException("Loan not found for loan number: " + loanDto.loanNumber()));
         LoanMapper.mapToLoanEntity(loanDto, loan);
         loanRepository.save(loan);
-        return  true;
+        return true;
     }
 
     private Long generateUniqueLoanNumber() {
