@@ -68,3 +68,10 @@ resilience4j:
         waitDurationInOpenState: 10s
         failureRateThreshold: 50
         eventConsumerBufferSize: 10
+  retry:
+    configs:
+      default:
+        maxAttempts: 3
+        waitDuration: 500ms
+        enable-exponential-backoff: true
+        exponential-backoff-multiplier: 2
