@@ -38,7 +38,7 @@ public class CustomerMapper {
         customerEntity.setMobileNumber(customerDto.mobileNumber());
     }
 
-    public static CustomerDetailsDto toCustomerDetailsDto(CustomerEntity customerEntity, AccountEntity account, ResponseEntity<LoanDto> loanDto, ResponseEntity<CardDto> cardDto) {
+    public static CustomerDetailsDto toCustomerDetailsDto(CustomerEntity customerEntity, AccountEntity account, LoanDto loanDto, CardDto cardDto) {
         return CustomerDetailsDto.builder()
                 .name(customerEntity.getName())
                 .email(customerEntity.getEmail())
@@ -48,8 +48,8 @@ public class CustomerMapper {
                         .accountType(account.getAccountType())
                         .branchAddress(account.getBranchAddress())
                         .build())
-                .loanDto(loanDto.getBody())
-                .cardDto(cardDto.getBody())
+                .loanDto(loanDto)
+                .cardDto(cardDto)
                 .build();
     }
 

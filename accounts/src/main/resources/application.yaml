@@ -8,7 +8,7 @@ spring:
       - "optional:configserver:http://localhost:8071/"
   profiles:
     active:
-      - qa
+      - prod
   datasource:
     url: jdbc:mysql://localhost:3306/accountsdb
     driver-class-name: com.mysql.cj.jdbc.Driver
@@ -22,6 +22,10 @@ spring:
     properties:
       hibernate:
         format_sql: true
+  cloud:
+    openfeign:
+      circuitbreaker:
+        enabled: true
 
 management:
   endpoints:
@@ -53,3 +57,14 @@ logging:
     com:
       bank:
         accounts: DEBUG
+
+resilience4j:
+  circuitbreaker:
+    configs:
+      default:
+        registerHealthIndicator: true
+        slidingWindowSize: 10
+        permittedNumberOfCallsInHalfOpenState: 2
+        waitDurationInOpenState: 10s
+        failureRateThreshold: 50
+        eventConsumerBufferSize: 10

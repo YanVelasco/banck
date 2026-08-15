@@ -13,6 +13,9 @@ import com.bank.accounts.services.ICustomerService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import java.util.Objects;
+import java.util.stream.Stream;
+
 @Service
 public class CustomerServiceImpl implements ICustomerService {
 
@@ -35,9 +38,23 @@ public class CustomerServiceImpl implements ICustomerService {
         var account = accountRepository.findByCustomerId(customerEntity.getCustomerId())
                 .orElseThrow(() -> new NotFoundException("Account for customer with mobile number " + mobileNumber + " not found."));
 
-        ResponseEntity<LoanDto> loanDto = loansFeignClient.fetchLoanDetails(correlationId, mobileNumber);
+        LoanDto loanDto = Stream
+                .ofNullable(
+                        loansFeignClient.fetchLoanDetails(correlationId, mobileNumber)
+                )
+                .map(ResponseEntity::getBody)
+                .filter(Objects::nonNull)
+                .findFirst()
+                .orElse(null);
 
-        ResponseEntity<CardDto> cardDto = cardsFeignClient.fetchCardDetails(correlationId, mobileNumber);
+        CardDto cardDto = Stream
+                .ofNullable(
+                        cardsFeignClient.fetchCardDetails(correlationId, mobileNumber)
+                )
+                .map(ResponseEntity::getBody)
+                .filter(Objects::nonNull)
+                .findFirst()
+                .orElse(null);
 
         return CustomerMapper.toCustomerDetailsDto(customerEntity, account, loanDto, cardDto);
     }
