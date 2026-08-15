@@ -106,7 +106,7 @@ services:
       - bank-network
 
   eurekaserver:
-    image: yanvelasco/eurekaserver:v1
+    image: yanvelasco/eurekaserver:v2
     container_name: eurekaserver
     ports:
       - "8070:8070"
@@ -133,6 +133,38 @@ services:
       - SPRING_APPLICATION_NAME=eurekaserver
       - SPRING_CONFIG_IMPORT=configserver:http://config-server:8071/
       - SPRING_PROFILES_ACTIVE=default
+
+  gatewayserver:
+    image: yanvelasco/gatewayserver:v1
+    container_name: gatewayserver
+    ports:
+      - "8072:8072"
+    depends_on:
+      config-server:
+        condition: service_healthy
+      eurekaserver:
+        condition: service_healthy
+      accounts:
+        condition: service_started
+      loans:
+        condition: service_started
+      cards:
+        condition: service_started
+    deploy:
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+    networks:
+      - bank-network
+    environment:
+      - SPRING_APPLICATION_NAME=gatewayserver
+      - SPRING_CONFIG_IMPORT=configserver:http://config-server:8071/
+      - SPRING_PROFILES_ACTIVE=default
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eurekaserver:8070/eureka/
 
   accounts:
     image: yanvelasco/accounts:v3

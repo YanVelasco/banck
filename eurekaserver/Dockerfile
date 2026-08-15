@@ -23,7 +23,7 @@ RUN apt-get update \
 
 COPY --from=build /workspace/target/eurekaserver-0.0.1-SNAPSHOT.jar app.jar
 
-EXPOSE 8071
+EXPOSE 8070
 
 ENV HOME=/home/spring
 
