@@ -5,7 +5,9 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.gateway.route.RouteLocator;
 import org.springframework.cloud.gateway.route.builder.RouteLocatorBuilder;
 import org.springframework.context.annotation.Bean;
+import org.springframework.http.HttpMethod;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 
 @SpringBootApplication
@@ -33,8 +35,11 @@ public class GatewayserverApplication {
                         .path("/bank/cards/**")
                         .filters(f -> f.rewritePath("/bank/cards/(?<segment>.*)", "/${segment}")
                                 .addResponseHeader("X-Response-Time", LocalDateTime.now().toString())
-                                .circuitBreaker(c -> c.setName("cardsCircuitBreaker")
-                                        .setFallbackUri("forward:/fallback/contactSupport")
+                                .retry(r -> r.setRetries(3)
+                                        .setMethods(HttpMethod.GET)
+                                        .setBackoff(
+                                                Duration.ofMillis(100), Duration.ofMillis(1000), 2, true
+                                        )
                                 )
                         )
                         .uri("lb://CARDS")
@@ -43,8 +48,11 @@ public class GatewayserverApplication {
                         .path("/bank/loans/**")
                         .filters(f -> f.rewritePath("/bank/loans/(?<segment>.*)", "/${segment}")
                                 .addResponseHeader("X-Response-Time", LocalDateTime.now().toString())
-                                .circuitBreaker(c -> c.setName("loansCircuitBreaker")
-                                        .setFallbackUri("forward:/fallback/contactSupport")
+                                .retry(r -> r.setRetries(3)
+                                        .setMethods(HttpMethod.GET)
+                                        .setBackoff(
+                                                Duration.ofMillis(100), Duration.ofMillis(1000), 2, true
+                                        )
                                 )
                         )
                         .uri("lb://LOANS")
