@@ -27,7 +27,9 @@ public class ResponseTraceFilter {
             String correlationId = filterUtility.getCorrelationId(requestHeaders);
             logger.debug("Completing outgoing request for correlation id: {}", correlationId);
             if (correlationId != null) {
-                exchange.getResponse().getHeaders().add(FilterUtility.CORRELATION_ID, correlationId);
+                if (!(exchange.getResponse().getHeaders().containsHeader(FilterUtility.CORRELATION_ID))) {
+                    exchange.getResponse().getHeaders().add(FilterUtility.CORRELATION_ID, correlationId);
+                }
             } else {
                 logger.warn("No correlation id found in request headers; response header won't be set.");
             }
