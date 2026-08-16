@@ -75,3 +75,14 @@ resilience4j:
         waitDuration: 500ms
         enable-exponential-backoff: true
         exponential-backoff-multiplier: 2
+  ratelimiter:
+    configs:
+      default:
+        registerHealthIndicator: true
+        limitForPeriod: ${ACCOUNTS_RATE_LIMIT_FOR_PERIOD:5}
+        limitRefreshPeriod: ${ACCOUNTS_RATE_LIMIT_REFRESH_PERIOD:1s}
+        timeoutDuration: ${ACCOUNTS_RATE_LIMIT_TIMEOUT:0}
+        eventConsumerBufferSize: 10
+    instances:
+      getContactInfo:
+        baseConfig: default

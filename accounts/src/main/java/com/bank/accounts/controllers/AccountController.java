@@ -6,6 +6,7 @@ import com.bank.accounts.dtos.ErrorResponseDto;
 import com.bank.accounts.dtos.ResponseDto;
 import com.bank.accounts.enums.AccountConstantsEnum;
 import com.bank.accounts.services.IAccountService;
+import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
 import io.github.resilience4j.retry.annotation.Retry;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -219,12 +220,20 @@ public class AccountController {
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Account contact information retrieved successfully",
                     content = @Content(schema = @Schema(implementation = AccountContactInfoDto.class))),
+            @ApiResponse(responseCode = "429", description = "Too many requests - rate limit exceeded",
+                    content = @Content(schema = @Schema(implementation = ErrorResponseDto.class))),
             @ApiResponse(responseCode = "500", description = "Failed to retrieve account contact information",
                     content = @Content(schema = @Schema(implementation = ErrorResponseDto.class)))
     })
+    @RateLimiter(name = "getContactInfo", fallbackMethod = "getContactInfoFallback")
     @GetMapping("/contact-info")
     public ResponseEntity<AccountContactInfoDto> getContactInfo() {
         return ResponseEntity.status(HttpStatus.OK).body(accountContactInfoDto);
+    }
+
+    public ResponseEntity<AccountContactInfoDto> getContactInfoFallback(Throwable throwable) {
+        LOGGER.warn("Rate limit exceeded for contact-info: {}", throwable.getMessage());
+        return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).build();
     }
 
 }
