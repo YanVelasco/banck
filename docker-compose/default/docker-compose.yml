@@ -134,6 +134,28 @@ services:
       - SPRING_CONFIG_IMPORT=configserver:http://config-server:8071/
       - SPRING_PROFILES_ACTIVE=default
 
+  redis:
+    image: redis:8.0-alpine
+    container_name: redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 256M
+        reservations:
+          cpus: '0.10'
+          memory: 64M
+    networks:
+      - bank-network
+
   gatewayserver:
     image: yanvelasco/gatewayserver:v1
     container_name: gatewayserver
@@ -143,6 +165,8 @@ services:
       config-server:
         condition: service_healthy
       eurekaserver:
+        condition: service_healthy
+      redis:
         condition: service_healthy
       accounts:
         condition: service_started
@@ -165,6 +189,8 @@ services:
       - SPRING_CONFIG_IMPORT=configserver:http://config-server:8071/
       - SPRING_PROFILES_ACTIVE=default
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eurekaserver:8070/eureka/
+      - SPRING_DATA_REDIS_HOST=redis
+      - SPRING_DATA_REDIS_PORT=6379
 
   accounts:
     image: yanvelasco/accounts:v3

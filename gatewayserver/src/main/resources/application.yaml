@@ -4,6 +4,10 @@ spring:
   config:
     import:
       - "optional:configserver:http://localhost:8071/"
+  data:
+    redis:
+      host: ${SPRING_DATA_REDIS_HOST:localhost}
+      port: ${SPRING_DATA_REDIS_PORT:6379}
   cloud:
     gateway:
       server:
@@ -15,6 +19,13 @@ spring:
           httpclient:
             connect-timeout: 1000
             response-timeout: 2s
+
+bank:
+  gateway:
+    rate-limit:
+      replenish-rate: ${BANK_GATEWAY_RATE_LIMIT_REPLENISH_RATE:10}
+      burst-capacity: ${BANK_GATEWAY_RATE_LIMIT_BURST_CAPACITY:20}
+      requested-tokens: ${BANK_GATEWAY_RATE_LIMIT_REQUESTED_TOKENS:1}
 
 logging:
   level:
@@ -28,7 +39,21 @@ resilience4j:
       default:
         registerHealthIndicator: true
         slidingWindowSize: 10
+        minimumNumberOfCalls: 5
         permittedNumberOfCallsInHalfOpenState: 2
         waitDurationInOpenState: 10s
         failureRateThreshold: 50
+        slowCallRateThreshold: 50
+        slowCallDurationThreshold: 2s
         eventConsumerBufferSize: 10
+    instances:
+      accountsCircuitBreaker:
+        baseConfig: default
+  timelimiter:
+    configs:
+      default:
+        timeoutDuration: 4s
+        cancelRunningFuture: true
+    instances:
+      accountsCircuitBreaker:
+        baseConfig: default
