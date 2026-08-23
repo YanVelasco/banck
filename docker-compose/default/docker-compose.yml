@@ -84,7 +84,7 @@ services:
       - bank-network
 
   config-server:
-    image: yanvelasco/config-server:v2
+    image: yanvelasco/config-server:v3
     container_name: config-server
     ports:
       - "8071:8071"
@@ -106,7 +106,7 @@ services:
       - bank-network
 
   eurekaserver:
-    image: yanvelasco/eurekaserver:v2
+    image: yanvelasco/eurekaserver:v3
     container_name: eurekaserver
     ports:
       - "8070:8070"
@@ -157,7 +157,7 @@ services:
       - bank-network
 
   gatewayserver:
-    image: yanvelasco/gatewayserver:v2
+    image: yanvelasco/gatewayserver:v3
     container_name: gatewayserver
     ports:
       - "8072:8072"
@@ -193,7 +193,7 @@ services:
       - SPRING_DATA_REDIS_PORT=6379
 
   accounts:
-    image: yanvelasco/accounts:v4
+    image: yanvelasco/accounts:v5
     container_name: accounts
     ports:
       - "8080:8080"
@@ -227,7 +227,7 @@ services:
       - SPRING_JPA_DATABASE_PLATFORM=org.hibernate.dialect.MySQLDialect
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eurekaserver:8070/eureka/
   loans:
-    image: yanvelasco/loans:v5
+    image: yanvelasco/loans:v6
     container_name: loans
     ports:
       - "8090:8090"
@@ -261,7 +261,7 @@ services:
       - SPRING_JPA_DATABASE_PLATFORM=org.hibernate.dialect.MySQLDialect
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eurekaserver:8070/eureka/
   cards:
-    image: yanvelasco/cards:v5
+    image: yanvelasco/cards:v6
     container_name: cards
     ports:
       - "9000:9000"
