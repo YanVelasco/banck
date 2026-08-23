@@ -1,19 +1,33 @@
-// Discover Docker containers
- discovery.docker "containers" {
-  host = "unix:///var/run/docker.sock"
+// Discover Docker containers (equivalente ao docker_sd_configs do Promtail)
+discovery.docker "containers" {
+  host             = "unix:///var/run/docker.sock"
+  refresh_interval = "5s"
+}
+
+// Relabel: extrai o nome do container para o label "container"
+// (equivalente ao relabel_configs do Promtail)
+discovery.relabel "containers" {
+  targets = discovery.docker.containers.targets
+
+  rule {
+    source_labels = ["__meta_docker_container_name"]
+    regex         = "/(.*)"
+    target_label  = "container"
+  }
 }
 
 // Tail container logs and forward them directly to Loki
 loki.source.docker "containers" {
   host    = "unix:///var/run/docker.sock"
-  targets = discovery.docker.containers.targets
+  targets = discovery.relabel.containers.output
   forward_to = [loki.write.loki.receiver]
 }
 
 // Write logs to Loki
 loki.write "loki" {
   endpoint {
-    url = "http://loki:3100/loki/api/v1/push"
+    url       = "http://loki:3100/loki/api/v1/push"
+    tenant_id = "bank"
   }
 
   external_labels = {
