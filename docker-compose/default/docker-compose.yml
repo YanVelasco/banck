@@ -391,6 +391,39 @@ services:
     networks:
       - bank-network
 
+  prometheus:
+    image: prom/prometheus:v3.14.0
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - prometheus-data:/prometheus
+      - type: bind
+        source: ./prometheus.yml
+        target: /etc/prometheus/prometheus.yml
+        read_only: true
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --storage.tsdb.retention.time=7d
+      - --web.enable-lifecycle
+    healthcheck:
+      test: [ "CMD", "wget", "--spider", "--quiet", "http://localhost:9090/-/ready" ]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 256M
+        reservations:
+          cpus: '0.25'
+          memory: 128M
+    networks:
+      - bank-network
+
   grafana:
     image: grafana/grafana:11.0.0
     container_name: grafana
@@ -408,6 +441,8 @@ services:
       - GF_PATHS_CONFIG=/etc/grafana/grafana.ini
     depends_on:
       loki:
+        condition: service_started
+      prometheus:
         condition: service_started
       gatewayserver:
         condition: service_started
@@ -439,4 +474,5 @@ volumes:
   mysql-cards-data:
   minio-data:
   loki-data:
+  prometheus-data:
   grafana-data:
