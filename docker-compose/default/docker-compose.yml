@@ -157,7 +157,7 @@ services:
       - bank-network
 
   gatewayserver:
-    image: yanvelasco/gatewayserver:v1
+    image: yanvelasco/gatewayserver:v2
     container_name: gatewayserver
     ports:
       - "8072:8072"
@@ -193,7 +193,7 @@ services:
       - SPRING_DATA_REDIS_PORT=6379
 
   accounts:
-    image: yanvelasco/accounts:v3
+    image: yanvelasco/accounts:v4
     container_name: accounts
     ports:
       - "8080:8080"
