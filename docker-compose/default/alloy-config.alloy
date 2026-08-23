@@ -1,47 +1,21 @@
-// Scrape Docker container logs
-discovery.docker "containers" {
+// Discover Docker containers
+ discovery.docker "containers" {
   host = "unix:///var/run/docker.sock"
 }
 
-local.file_sd "containers" {
-  targets = discovery.docker.containers.targets
-}
-
-// Tail Docker container logs
+// Tail container logs and forward them directly to Loki
 loki.source.docker "containers" {
-  targets = local.file_sd.containers.targets
-  forward_to = [loki.process.containers.receiver]
-}
-
-// Process logs
-loki.process "containers" {
-  stage.regex {
-    expression = "^(?P<timestamp>[^ ]*) (?P<service>[^ ]*) (?P<level>[^ ]*) (?P<message>.*)"
-  }
-  
-  stage.timestamp {
-    source = "timestamp"
-    format = "Unix"
-  }
-  
-  stage.labels {
-    values = {
-      level   = "",
-      service = "",
-    }
-  }
-  
+  host    = "unix:///var/run/docker.sock"
+  targets = discovery.docker.containers.targets
   forward_to = [loki.write.loki.receiver]
 }
 
 // Write logs to Loki
 loki.write "loki" {
-  loki_name = "loki"
-  clients = [
-    {
-      url = "http://loki:3100/loki/api/v1/push"
-    }
-  ]
+  endpoint {
+    url = "http://loki:3100/loki/api/v1/push"
+  }
+
   external_labels = {
     instance = "alloy",
   }

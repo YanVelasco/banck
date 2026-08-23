@@ -11,7 +11,7 @@ services:
     volumes:
       - mysql-accounts-data:/var/lib/mysql
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot"]
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot" ]
       interval: 30s
       timeout: 10s
       retries: 10
@@ -39,7 +39,7 @@ services:
     volumes:
       - mysql-loans-data:/var/lib/mysql
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot"]
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot" ]
       interval: 30s
       timeout: 10s
       retries: 10
@@ -67,7 +67,7 @@ services:
     volumes:
       - mysql-cards-data:/var/lib/mysql
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot"]
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot" ]
       interval: 30s
       timeout: 10s
       retries: 10
@@ -306,6 +306,14 @@ services:
     environment:
       - MINIO_ROOT_USER=minioadmin
       - MINIO_ROOT_PASSWORD=minioadmin
+      - MINIO_PROMETHEUS_AUTH_TYPE=public
+      - MINIO_UPDATE=off
+    healthcheck:
+      test: [ "CMD", "wget", "--spider", "--quiet", "http://localhost:9000/minio/health/live" ]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
     command: server /data --console-address ":9001"
     deploy:
       resources:
@@ -334,7 +342,7 @@ services:
       minio:
         condition: service_started
     healthcheck:
-      test: ["CMD", "wget", "--spider", "--quiet", "http://localhost:3100/ready"]
+      test: [ "CMD", "wget", "--spider", "--quiet", "http://localhost:3100/ready" ]
       interval: 30s
       timeout: 10s
       retries: 10
@@ -367,7 +375,7 @@ services:
       gatewayserver:
         condition: service_started
     healthcheck:
-      test: ["CMD", "wget", "--spider", "--quiet", "http://localhost:12345/ready"]
+      test: [ "CMD", "wget", "--spider", "--quiet", "http://localhost:12345/ready" ]
       interval: 30s
       timeout: 10s
       retries: 10
@@ -390,15 +398,22 @@ services:
       - "3000:3000"
     volumes:
       - grafana-data:/var/lib/grafana
+      - ./provisioning:/etc/grafana/provisioning
     environment:
       - GF_SECURITY_ADMIN_PASSWORD=admin
       - GF_USERS_ALLOW_SIGN_UP=false
-      - GF_LOG_LEVEL=info
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
+      - GF_PATHS_PROVISIONING=/etc/grafana/provisioning
+      - GF_PATHS_CONFIG=/etc/grafana/grafana.ini
     depends_on:
       loki:
         condition: service_started
+      gatewayserver:
+        condition: service_started
+    entrypoint: [ "/bin/sh", "-c", "grafana-server --homepath=/usr/share/grafana --config=/etc/grafana/grafana.ini cfg:default.paths.provisioning=/etc/grafana/provisioning" ]
     healthcheck:
-      test: ["CMD", "wget", "--spider", "--quiet", "http://localhost:3000/ready"]
+      test: [ "CMD", "wget", "--spider", "--quiet", "http://localhost:3000/ready" ]
       interval: 30s
       timeout: 10s
       retries: 10
