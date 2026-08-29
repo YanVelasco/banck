@@ -1,0 +1,87 @@
+# =============================================================================
+# Grafana Tempo - Distributed Tracing Backend
+# Recebe traces via OTLP (gRPC 4317 / HTTP 4318) dos microservices
+# e disponibiliza consultas para o Grafana em http://tempo:3200
+# =============================================================================
+
+server:
+  http_listen_port: 3200
+  grpc_listen_port: 9095
+  log_level: info
+
+# -----------------------------------------------------------------------------
+# Distributor: recepção de traces (OTLP)
+# -----------------------------------------------------------------------------
+distributor:
+  receivers:
+    otlp:
+      protocols:
+        grpc:
+          endpoint: 0.0.0.0:4317
+        http:
+          endpoint: 0.0.0.0:4318
+  log_received_spans:
+    enabled: false
+
+# -----------------------------------------------------------------------------
+# Ingester: agrupamento de spans em blocos antes da gravação
+# -----------------------------------------------------------------------------
+ingester:
+  max_block_duration: 5m
+  max_block_bytes: 1_000_000
+  trace_idle_period: 10m
+  complete_block_timeout: 15m
+
+# -----------------------------------------------------------------------------
+# Compactor: compactação e retenção dos blocos
+# -----------------------------------------------------------------------------
+compactor:
+  compaction:
+    block_retention: 48h
+    compacted_block_retention: 1h
+    compaction_window: 1h
+    max_compaction_objects: 1000000
+
+# -----------------------------------------------------------------------------
+# Querier / Query Frontend: consultas do Grafana
+# -----------------------------------------------------------------------------
+querier:
+  max_concurrent_queries: 20
+
+query_frontend:
+  search:
+    concurrent_jobs: 1000
+  trace_by_id:
+    query_shards: 50
+
+# -----------------------------------------------------------------------------
+# Storage: backend local (dev). Em produção prefira s3/gcs/azure.
+# -----------------------------------------------------------------------------
+storage:
+  trace:
+    backend: local
+    local:
+      path: /var/tempo/blocks
+    wal:
+      path: /var/tempo/wal
+    pool:
+      max_workers: 100
+      queue_depth: 10000
+
+# -----------------------------------------------------------------------------
+# Limites globais de ingestão (proteção contra sobrecarga)
+# -----------------------------------------------------------------------------
+overrides:
+  defaults:
+    ingestion:
+      rate_limit_bytes: 15000000  # 15 MB/s
+      burst_size_bytes: 20000000  # 20 MB
+      max_traces_per_user: 10000
+    global:
+      max_bytes_per_trace: 5000000 # 5 MB por trace
+
+# -----------------------------------------------------------------------------
+# Usage report (telemetria anônima da Grafana Labs)
+# -----------------------------------------------------------------------------
+usage_report:
+  reporting_enabled: false

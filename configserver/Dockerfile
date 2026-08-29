@@ -10,6 +10,9 @@ COPY src ./src/
 
 RUN --mount=type=cache,target=/root/.m2 mvn -B -q -Dmaven.test.skip=true package
 
+# Extract Spring Boot layers for better image layer caching
+RUN java -Djarmode=tools -jar target/configserver-0.0.1-SNAPSHOT.jar extract --layers --launcher --destination extracted
+
 FROM eclipse-temurin:21-jre-jammy
 WORKDIR /app
 
@@ -21,7 +24,11 @@ RUN apt-get update \
     && mkdir -p /home/spring/.config/jgit /app \
     && chown -R spring:spring /home/spring /app
 
-COPY --from=build /workspace/target/configserver-0.0.1-SNAPSHOT.jar app.jar
+COPY --from=build /workspace/target/otel/opentelemetry-javaagent.jar /app/libs/opentelemetry-javaagent.jar
+COPY --from=build /workspace/extracted/dependencies/ ./
+COPY --from=build /workspace/extracted/spring-boot-loader/ ./
+COPY --from=build /workspace/extracted/snapshot-dependencies/ ./
+COPY --from=build /workspace/extracted/application/ ./
 
 EXPOSE 8071
 
@@ -29,4 +36,4 @@ ENV HOME=/home/spring
 
 USER spring:spring
 
-ENTRYPOINT ["java", "-XX:MaxRAMPercentage=75", "-jar", "/app/app.jar"]
+ENTRYPOINT ["java", "-XX:MaxRAMPercentage=75", "org.springframework.boot.loader.launch.JarLauncher"]

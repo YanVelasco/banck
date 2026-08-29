@@ -8,12 +8,16 @@ import com.bank.loans.exceptions.NotFoundException;
 import com.bank.loans.mapper.LoanMapper;
 import com.bank.loans.repository.LoanRepository;
 import com.bank.loans.service.ILoanService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.util.concurrent.ThreadLocalRandom;
 
 @Service
 public class LoanServiceImpl implements ILoanService {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(LoanServiceImpl.class);
 
     private final LoanRepository loanRepository;
 
@@ -24,11 +28,13 @@ public class LoanServiceImpl implements ILoanService {
 
     @Override
     public void createLoan(String mobileNumber) {
+        LOGGER.debug("createLoan method start");
         if (loanRepository.findByMobileNumber(mobileNumber).isPresent()) {
             throw new AlreadyExistsException("Loan already exists for mobile number: " + mobileNumber);
         }
 
         loanRepository.save(newLoan(mobileNumber));
+        LOGGER.debug("createLoan method end");
     }
 
     private LoanEntity newLoan(String mobileNumber) {
@@ -45,18 +51,22 @@ public class LoanServiceImpl implements ILoanService {
 
     @Override
     public LoanDto fetchLoan(String mobileNumber) {
+        LOGGER.debug("fetchLoan method start");
         LoanEntity loan = loanRepository.findByMobileNumber(mobileNumber).orElseThrow(
                 () -> new NotFoundException("Loan not found for mobile number: " + mobileNumber)
         );
+        LOGGER.debug("fetchLoan method end");
         return LoanMapper.mapToLoanDto(loan);
     }
 
     @Override
     public boolean updateLoan(LoanDto loanDto) {
+        LOGGER.debug("updateLoan method start");
         LoanEntity loan = loanRepository.findByLoanNumber(Long.valueOf(loanDto.loanNumber())).orElseThrow(
                 () -> new NotFoundException("Loan not found for loan number: " + loanDto.loanNumber()));
         LoanMapper.mapToLoanEntity(loanDto, loan);
         loanRepository.save(loan);
+        LOGGER.debug("updateLoan method end");
         return true;
     }
 
@@ -70,10 +80,12 @@ public class LoanServiceImpl implements ILoanService {
 
     @Override
     public boolean deleteLoan(String mobileNumber) {
+        LOGGER.debug("deleteLoan method start");
         LoanEntity loan = loanRepository.findByMobileNumber(mobileNumber).orElseThrow(
                 () -> new NotFoundException("Loan not found for mobile number: " + mobileNumber)
         );
         loanRepository.deleteById(loan.getLoanId());
+        LOGGER.debug("deleteLoan method end");
         return true;
     }
 

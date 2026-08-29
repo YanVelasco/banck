@@ -23,6 +23,41 @@ loki.source.docker "containers" {
   forward_to = [loki.write.loki.receiver]
 }
 
+// Receive OTLP logs from the OpenTelemetry Java Agent (microservices)
+otelcol.receiver.otlp "default" {
+  http {
+    endpoint = "0.0.0.0:4318"
+  }
+
+  output {
+    logs   = [otelcol.processor.batch.default.input]
+    traces = [otelcol.processor.batch.default.input]
+  }
+}
+
+otelcol.processor.batch "default" {
+  output {
+    logs   = [otelcol.exporter.loki.default.input]
+    traces = [otelcol.exporter.otlp.tempo.input]
+  }
+}
+
+// Convert OTLP logs to Loki format and forward to Loki
+otelcol.exporter.loki "default" {
+  forward_to = [loki.write.loki.receiver]
+}
+
+// Forward traces to Grafana Tempo
+otelcol.exporter.otlp "tempo" {
+  client {
+    endpoint = "tempo:4317"
+
+    tls {
+      insecure = true
+    }
+  }
+}
+
 // Write logs to Loki
 loki.write "loki" {
   endpoint {

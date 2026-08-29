@@ -1,7 +1,6 @@
 package com.bank.accounts.controllers;
 
 import com.bank.accounts.dtos.CustomerDetailsDto;
-import com.bank.accounts.dtos.CustomerDto;
 import com.bank.accounts.dtos.ErrorResponseDto;
 import com.bank.accounts.services.ICustomerService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -55,8 +54,9 @@ public class CustomerController {
             @Parameter(description = "Customer mobile number (exactly 10 digits)", example = "1234567890")
             @RequestParam @Valid @Pattern(regexp = "\\d{10}", message = "Mobile number must be 10 digits") String mobileNumber
     ) {
-        LOGGER.debug("Correlation ID: {} - Fetching customer details for mobile number: {}", correlationId, mobileNumber);
+        LOGGER.debug("getCustomerDetailsByMobileNumber method start");
         var customerDetails = customerService.getCustomerDetailsByMobileNumber(mobileNumber, correlationId);
+        LOGGER.debug("getCustomerDetailsByMobileNumber method end");
         return ResponseEntity.status(HttpStatus.OK).body(customerDetails);
     }
 

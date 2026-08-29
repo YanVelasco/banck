@@ -66,7 +66,9 @@ public class CardController {
             @Valid @RequestParam
             @Pattern(regexp = "(^$|[0-9]{10})", message = "Mobile number must be 10 digits")
             String mobileNumber) {
+        LOGGER.debug("createCard method start");
         iCardService.createCard(mobileNumber);
+        LOGGER.debug("createCard method end");
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(
@@ -99,8 +101,10 @@ public class CardController {
             @Pattern(regexp = "(^$|[0-9]{10})", message = "Mobile number must be 10 digits")
             String mobileNumber
     ) {
-        LOGGER.debug("Fetching card details for mobile number: {} with correlation ID: {}", mobileNumber, correlationId);
+        LOGGER.debug("fetchCardDetails method start");
+        LOGGER.debug("Correlation id found: {}", correlationId);
         CardDto cardDto = iCardService.fetchCard(mobileNumber);
+        LOGGER.debug("fetchCardDetails method end");
         return ResponseEntity.status(HttpStatus.OK).body(cardDto);
     }
 
@@ -122,7 +126,9 @@ public class CardController {
     })
     @PutMapping("/update")
     public ResponseEntity<ResponseDto> updateCardDetails(@Valid @RequestBody CardDto cardsDto) {
+        LOGGER.debug("updateCardDetails method start");
         boolean isUpdated = iCardService.updateCard(cardsDto);
+        LOGGER.debug("updateCardDetails method end");
         if (isUpdated) {
             return ResponseEntity
                     .status(HttpStatus.OK)
@@ -166,7 +172,9 @@ public class CardController {
             @RequestParam
             @Pattern(regexp = "(^$|[0-9]{10})", message = "Mobile number must be 10 digits")
             String mobileNumber) {
+        LOGGER.debug("deleteCardDetails method start");
         boolean isDeleted = iCardService.deleteCard(mobileNumber);
+        LOGGER.debug("deleteCardDetails method end");
         if (isDeleted) {
             return ResponseEntity
                     .status(HttpStatus.OK)
@@ -200,7 +208,10 @@ public class CardController {
     })
     @GetMapping("/build-info")
     public ResponseEntity<String> getBuildVersion() {
-        return ResponseEntity.status(HttpStatus.OK).body(buildVersion);
+        LOGGER.debug("getBuildVersion method start");
+        var response = ResponseEntity.status(HttpStatus.OK).body(buildVersion);
+        LOGGER.debug("getBuildVersion method end");
+        return response;
     }
 
     @Operation(
@@ -215,7 +226,10 @@ public class CardController {
     })
     @GetMapping("/java-version")
     public ResponseEntity<String> getJavaVersion() {
-        return ResponseEntity.status(HttpStatus.OK).body(environment.getProperty("JAVA_HOME"));
+        LOGGER.debug("getJavaVersion method start");
+        var response = ResponseEntity.status(HttpStatus.OK).body(environment.getProperty("JAVA_HOME"));
+        LOGGER.debug("getJavaVersion method end");
+        return response;
     }
 
     @Operation(
@@ -230,7 +244,10 @@ public class CardController {
     })
     @GetMapping("/contact-info")
     public ResponseEntity<CardContactInfoDto> getContactInfo() {
-        return ResponseEntity.status(HttpStatus.OK).body(cardContactInfoDto);
+        LOGGER.debug("getContactInfo method start");
+        var response = ResponseEntity.status(HttpStatus.OK).body(cardContactInfoDto);
+        LOGGER.debug("getContactInfo method end");
+        return response;
     }
 
 }

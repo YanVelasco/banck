@@ -84,10 +84,18 @@ services:
       - bank-network
 
   config-server:
-    image: yanvelasco/config-server:v3
+    image: yanvelasco/config-server:v4
     container_name: config-server
     ports:
       - "8071:8071"
+    environment:
+      - JAVA_TOOL_OPTIONS=-javaagent:/app/libs/opentelemetry-javaagent.jar
+      - OTEL_SERVICE_NAME=configserver
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://tempo:4318
+      - OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf
+      - OTEL_LOGS_EXPORTER=none
+      - OTEL_METRICS_EXPORTER=none
+      - OTEL_TRACES_EXPORTER=otlp
     healthcheck:
       test: [ "CMD-SHELL", "curl --fail --silent http://localhost:8071/actuator/health | grep UP || exit 1" ]
       interval: 30s
@@ -106,7 +114,7 @@ services:
       - bank-network
 
   eurekaserver:
-    image: yanvelasco/eurekaserver:v3
+    image: yanvelasco/eurekaserver:v4
     container_name: eurekaserver
     ports:
       - "8070:8070"
@@ -133,6 +141,13 @@ services:
       - SPRING_APPLICATION_NAME=eurekaserver
       - SPRING_CONFIG_IMPORT=configserver:http://config-server:8071/
       - SPRING_PROFILES_ACTIVE=default
+      - JAVA_TOOL_OPTIONS=-javaagent:/app/libs/opentelemetry-javaagent.jar
+      - OTEL_SERVICE_NAME=eurekaserver
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://tempo:4318
+      - OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf
+      - OTEL_LOGS_EXPORTER=none
+      - OTEL_METRICS_EXPORTER=none
+      - OTEL_TRACES_EXPORTER=otlp
 
   redis:
     image: redis:8.0-alpine
@@ -157,7 +172,7 @@ services:
       - bank-network
 
   gatewayserver:
-    image: yanvelasco/gatewayserver:v3
+    image: yanvelasco/gatewayserver:v4
     container_name: gatewayserver
     ports:
       - "8072:8072"
@@ -191,9 +206,16 @@ services:
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eurekaserver:8070/eureka/
       - SPRING_DATA_REDIS_HOST=redis
       - SPRING_DATA_REDIS_PORT=6379
+      - JAVA_TOOL_OPTIONS=-javaagent:/app/libs/opentelemetry-javaagent.jar
+      - OTEL_SERVICE_NAME=gatewayserver
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://tempo:4318
+      - OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf
+      - OTEL_LOGS_EXPORTER=none
+      - OTEL_METRICS_EXPORTER=none
+      - OTEL_TRACES_EXPORTER=otlp
 
   accounts:
-    image: yanvelasco/accounts:v5
+    image: yanvelasco/accounts:v6
     container_name: accounts
     ports:
       - "8080:8080"
@@ -226,8 +248,15 @@ services:
       - SPRING_DATASOURCE_DRIVER_CLASS_NAME=com.mysql.cj.jdbc.Driver
       - SPRING_JPA_DATABASE_PLATFORM=org.hibernate.dialect.MySQLDialect
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eurekaserver:8070/eureka/
+      - JAVA_TOOL_OPTIONS=-javaagent:/app/libs/opentelemetry-javaagent.jar
+      - OTEL_SERVICE_NAME=accounts
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://tempo:4318
+      - OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf
+      - OTEL_LOGS_EXPORTER=none
+      - OTEL_METRICS_EXPORTER=none
+      - OTEL_TRACES_EXPORTER=otlp
   loans:
-    image: yanvelasco/loans:v6
+    image: yanvelasco/loans:v7
     container_name: loans
     ports:
       - "8090:8090"
@@ -260,8 +289,15 @@ services:
       - SPRING_DATASOURCE_DRIVER_CLASS_NAME=com.mysql.cj.jdbc.Driver
       - SPRING_JPA_DATABASE_PLATFORM=org.hibernate.dialect.MySQLDialect
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eurekaserver:8070/eureka/
+      - JAVA_TOOL_OPTIONS=-javaagent:/app/libs/opentelemetry-javaagent.jar
+      - OTEL_SERVICE_NAME=loans
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://tempo:4318
+      - OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf
+      - OTEL_LOGS_EXPORTER=none
+      - OTEL_METRICS_EXPORTER=none
+      - OTEL_TRACES_EXPORTER=otlp
   cards:
-    image: yanvelasco/cards:v6
+    image: yanvelasco/cards:v7
     container_name: cards
     ports:
       - "9000:9000"
@@ -294,6 +330,13 @@ services:
       - SPRING_DATASOURCE_DRIVER_CLASS_NAME=com.mysql.cj.jdbc.Driver
       - SPRING_JPA_DATABASE_PLATFORM=org.hibernate.dialect.MySQLDialect
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eurekaserver:8070/eureka/
+      - JAVA_TOOL_OPTIONS=-javaagent:/app/libs/opentelemetry-javaagent.jar
+      - OTEL_SERVICE_NAME=cards
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://tempo:4318
+      - OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf
+      - OTEL_LOGS_EXPORTER=none
+      - OTEL_METRICS_EXPORTER=none
+      - OTEL_TRACES_EXPORTER=otlp
 
   minio:
     image: minio/minio:RELEASE.2025-02-28T09-55-16Z
@@ -343,6 +386,36 @@ services:
         condition: service_started
     healthcheck:
       test: [ "CMD", "wget", "--spider", "--quiet", "http://localhost:3100/ready" ]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 256M
+        reservations:
+          cpus: '0.25'
+          memory: 128M
+    networks:
+      - bank-network
+
+  tempo:
+    image: grafana/tempo:2.6.1
+    container_name: tempo
+    ports:
+      - "3200:3200"
+      - "4317:4317"
+    volumes:
+      - tempo-data:/var/tempo
+      - type: bind
+        source: ./tempo.yml
+        target: /etc/tempo/tempo.yml
+        read_only: true
+    command: -config.file=/etc/tempo/tempo.yml
+    healthcheck:
+      test: [ "CMD", "wget", "--spider", "--quiet", "http://localhost:3200/ready" ]
       interval: 30s
       timeout: 10s
       retries: 10
@@ -474,5 +547,6 @@ volumes:
   mysql-cards-data:
   minio-data:
   loki-data:
+  tempo-data:
   prometheus-data:
   grafana-data:

@@ -11,6 +11,8 @@ import com.bank.accounts.mapper.CustomerMapper;
 import com.bank.accounts.repositories.AccountRepository;
 import com.bank.accounts.repositories.CustomerRepository;
 import com.bank.accounts.services.IAccountService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,6 +22,8 @@ import java.util.concurrent.ThreadLocalRandom;
 
 @Service
 public class AccountServiceImpl implements IAccountService {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(AccountServiceImpl.class);
 
     private final CustomerRepository customerRepository;
     private final AccountRepository accountRepository;
@@ -32,6 +36,7 @@ public class AccountServiceImpl implements IAccountService {
     @Transactional
     @Override
     public void createAccount(CustomerDto customerDto) {
+        LOGGER.debug("createAccount method start");
         customerRepository.findByMobileNumberOrEmail(customerDto.mobileNumber(), customerDto.email()).ifPresent(existingCustomer -> {
             throw new AlreadyExistsException("Customer with mobile number " + customerDto.mobileNumber() + " or email " + customerDto.email() + " already exists.");
         });
@@ -41,19 +46,23 @@ public class AccountServiceImpl implements IAccountService {
 
         AccountEntity accountEntity = createAccountEntity(customerEntity);
         accountRepository.save(accountEntity);
+        LOGGER.debug("createAccount method end");
     }
 
     @Override
     public CustomerDto fetchAccountDetails(String mobileNumber) {
+        LOGGER.debug("fetchAccountDetails method start");
         var customerEntity = customerRepository.findByMobileNumber(mobileNumber)
                 .orElseThrow(() -> new NotFoundException("Customer with mobile number " + mobileNumber + " not found."));
         var account = accountRepository.findByCustomerId(customerEntity.getCustomerId())
                 .orElseThrow(() -> new NotFoundException("Account for customer with mobile number " + mobileNumber + " not found."));
+        LOGGER.debug("fetchAccountDetails method end");
         return CustomerMapper.toCustomerDto(customerEntity, account);
     }
 
     @Override
     public boolean updateAccountDetails(CustomerDto customerDto) {
+        LOGGER.debug("updateAccountDetails method start");
         var isUpdated = false;
 
         var accountDto = customerDto.accountDto();
@@ -72,17 +81,20 @@ public class AccountServiceImpl implements IAccountService {
             isUpdated = true;
         }
 
+        LOGGER.debug("updateAccountDetails method end");
         return isUpdated;
     }
 
     @Override
     public boolean deleteAccount(String mobileNumber) {
+        LOGGER.debug("deleteAccount method start");
         var customerEntity = customerRepository.findByMobileNumber(mobileNumber)
                 .orElseThrow(() -> new NotFoundException("Customer with mobile number " + mobileNumber + " not found."));
 
         accountRepository.deleteByCustomerId(customerEntity.getCustomerId());
         customerRepository.deleteById(customerEntity.getCustomerId());
 
+        LOGGER.debug("deleteAccount method end");
         return true;
     }
 

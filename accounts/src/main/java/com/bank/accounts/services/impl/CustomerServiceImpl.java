@@ -10,6 +10,8 @@ import com.bank.accounts.mapper.CustomerMapper;
 import com.bank.accounts.repositories.AccountRepository;
 import com.bank.accounts.repositories.CustomerRepository;
 import com.bank.accounts.services.ICustomerService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
@@ -18,6 +20,8 @@ import java.util.stream.Stream;
 
 @Service
 public class CustomerServiceImpl implements ICustomerService {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(CustomerServiceImpl.class);
 
     private final AccountRepository accountRepository;
     private final CustomerRepository customerRepository;
@@ -33,6 +37,7 @@ public class CustomerServiceImpl implements ICustomerService {
 
     @Override
     public CustomerDetailsDto getCustomerDetailsByMobileNumber(String mobileNumber, String correlationId) {
+        LOGGER.debug("getCustomerDetailsByMobileNumber method start");
         var customerEntity = customerRepository.findByMobileNumber(mobileNumber)
                 .orElseThrow(() -> new NotFoundException("Customer with mobile number " + mobileNumber + " not found."));
         var account = accountRepository.findByCustomerId(customerEntity.getCustomerId())
@@ -56,6 +61,7 @@ public class CustomerServiceImpl implements ICustomerService {
                 .findFirst()
                 .orElse(null);
 
+        LOGGER.debug("getCustomerDetailsByMobileNumber method end");
         return CustomerMapper.toCustomerDetailsDto(customerEntity, account, loanDto, cardDto);
     }
 

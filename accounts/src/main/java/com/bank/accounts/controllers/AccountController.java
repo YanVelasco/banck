@@ -65,7 +65,9 @@ public class AccountController {
     public ResponseEntity<ResponseDto> createAccount(
             @RequestBody @Valid CustomerDto customerDto
     ) {
+        LOGGER.debug("createAccount method start");
         accountService.createAccount(customerDto);
+        LOGGER.debug("createAccount method end");
         return ResponseEntity.status(HttpStatus.CREATED).body(
                 ResponseDto.builder()
                         .statusCode(AccountConstantsEnum.STATUS_201.getValue())
@@ -93,7 +95,9 @@ public class AccountController {
             @Parameter(description = "Customer mobile number (exactly 10 digits)", example = "1234567890")
             @RequestParam @Valid @Pattern(regexp = "\\d{10}", message = "Mobile number must be 10 digits") String mobileNumber
     ) {
+        LOGGER.debug("fetchAccountDetails method start");
         CustomerDto customerDto = accountService.fetchAccountDetails(mobileNumber);
+        LOGGER.debug("fetchAccountDetails method end");
         return ResponseEntity.status(HttpStatus.OK).body(customerDto);
     }
 
@@ -115,7 +119,9 @@ public class AccountController {
     public ResponseEntity<ResponseDto> updateAccountDetails(
             @RequestBody @Valid CustomerDto customerDto
     ) {
+        LOGGER.debug("updateAccountDetails method start");
         boolean isUpdated = accountService.updateAccountDetails(customerDto);
+        LOGGER.debug("updateAccountDetails method end");
         if (isUpdated) {
             return ResponseEntity.status(HttpStatus.OK).body(
                     ResponseDto.builder()
@@ -152,7 +158,9 @@ public class AccountController {
             @Parameter(description = "Customer mobile number (exactly 10 digits)", example = "1234567890")
             @RequestParam @Valid @Pattern(regexp = "\\d{10}", message = "Mobile number must be 10 digits") String mobileNumber
     ) {
+        LOGGER.debug("deleteAccount method start");
         boolean isDeleted = accountService.deleteAccount(mobileNumber);
+        LOGGER.debug("deleteAccount method end");
         if (isDeleted) {
             return ResponseEntity.status(HttpStatus.NO_CONTENT).body(
                     ResponseDto.builder()
@@ -228,7 +236,10 @@ public class AccountController {
     @RateLimiter(name = "getContactInfo", fallbackMethod = "getContactInfoFallback")
     @GetMapping("/contact-info")
     public ResponseEntity<AccountContactInfoDto> getContactInfo() {
-        return ResponseEntity.status(HttpStatus.OK).body(accountContactInfoDto);
+        LOGGER.debug("getContactInfo method start");
+        var response = ResponseEntity.status(HttpStatus.OK).body(accountContactInfoDto);
+        LOGGER.debug("getContactInfo method end");
+        return response;
     }
 
     public ResponseEntity<AccountContactInfoDto> getContactInfoFallback(Throwable throwable) {

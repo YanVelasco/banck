@@ -53,3 +53,5 @@ logging:
     com:
       bank:
         cards: DEBUG
+  pattern:
+    level: "%5p[${spring.application.name},%X{trace_id},%X{span_id}] %d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %c{1} - %m%n"

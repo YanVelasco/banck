@@ -67,7 +67,9 @@ public class LoanController {
             @RequestParam
             @Pattern(regexp = "(^$|[0-9]{10})", message = "Mobile number must be 10 digits")
             String mobileNumber) {
+        LOGGER.debug("createLoan method start");
         iloanService.createLoan(mobileNumber);
+        LOGGER.debug("createLoan method end");
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(
@@ -99,9 +101,10 @@ public class LoanController {
             @RequestParam
             @Pattern(regexp = "(^$|[0-9]{10})", message = "Mobile number must be 10 digits")
             String mobileNumber) {
+        LOGGER.debug("fetchLoanDetails method start");
         LOGGER.debug("Correlation id found: {}", correlationId);
-        LOGGER.debug("Fetching loan details for mobile number: {}", mobileNumber);
         LoanDto loanDto = iloanService.fetchLoan(mobileNumber);
+        LOGGER.debug("fetchLoanDetails method end");
         return ResponseEntity.status(HttpStatus.OK).body(loanDto);
     }
 
@@ -123,7 +126,9 @@ public class LoanController {
     })
     @PutMapping("/update")
     public ResponseEntity<ResponseDto> updateLoanDetails(@Valid @RequestBody LoanDto loanDto) {
+        LOGGER.debug("updateLoanDetails method start");
         boolean isUpdated = iloanService.updateLoan(loanDto);
+        LOGGER.debug("updateLoanDetails method end");
         if (isUpdated) {
             return ResponseEntity
                     .status(HttpStatus.OK)
@@ -157,7 +162,9 @@ public class LoanController {
             @RequestParam
             @Pattern(regexp = "(^$|[0-9]{10})", message = "Mobile number must be 10 digits")
             String mobileNumber) {
+        LOGGER.debug("deleteLoanDetails method start");
         boolean isDeleted = iloanService.deleteLoan(mobileNumber);
+        LOGGER.debug("deleteLoanDetails method end");
         if (isDeleted) {
             return ResponseEntity
                     .status(HttpStatus.OK)
@@ -181,7 +188,10 @@ public class LoanController {
     })
     @GetMapping("/build-info")
     public ResponseEntity<String> getBuildVersion() {
-        return ResponseEntity.status(HttpStatus.OK).body(buildVersion);
+        LOGGER.debug("getBuildVersion method start");
+        var response = ResponseEntity.status(HttpStatus.OK).body(buildVersion);
+        LOGGER.debug("getBuildVersion method end");
+        return response;
     }
 
     @Operation(
@@ -196,7 +206,10 @@ public class LoanController {
     })
     @GetMapping("/java-version")
     public ResponseEntity<String> getJavaVersion() {
-        return ResponseEntity.status(HttpStatus.OK).body(environment.getProperty("JAVA_HOME"));
+        LOGGER.debug("getJavaVersion method start");
+        var response = ResponseEntity.status(HttpStatus.OK).body(environment.getProperty("JAVA_HOME"));
+        LOGGER.debug("getJavaVersion method end");
+        return response;
     }
 
     @Operation(
@@ -211,8 +224,10 @@ public class LoanController {
     })
     @GetMapping("/contact-info")
     public ResponseEntity<LoansContactInfoDto> getContactInfo() {
-        LOGGER.info("Fetching loans contact information");
-        return ResponseEntity.status(HttpStatus.OK).body(loansContactInfoDto);
+        LOGGER.debug("getContactInfo method start");
+        var response = ResponseEntity.status(HttpStatus.OK).body(loansContactInfoDto);
+        LOGGER.debug("getContactInfo method end");
+        return response;
     }
 
 }

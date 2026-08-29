@@ -8,6 +8,8 @@ import com.bank.cards.exceptions.NotFoundException;
 import com.bank.cards.mapper.CardsMapper;
 import com.bank.cards.repository.CardRepository;
 import com.bank.cards.service.ICardService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
@@ -15,6 +17,8 @@ import java.util.Random;
 
 @Service
 public class CardServiceImpl implements ICardService {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(CardServiceImpl.class);
 
     private static final int NEW_CARD_LIMIT = 100_000;
 
@@ -26,11 +30,13 @@ public class CardServiceImpl implements ICardService {
 
     @Override
     public void createCard(String mobileNumber) {
+        LOGGER.debug("createCard method start");
         Optional<CardEntity> optionalCard = cardRepository.findByMobileNumber(mobileNumber);
         if (optionalCard.isPresent()) {
             throw new AlreadyExistsException("Card already registered with given mobileNumber " + mobileNumber);
         }
         cardRepository.save(createNewCard(mobileNumber));
+        LOGGER.debug("createCard method end");
     }
 
     private CardEntity createNewCard(String mobileNumber) {
@@ -52,28 +58,34 @@ public class CardServiceImpl implements ICardService {
 
     @Override
     public CardDto fetchCard(String mobileNumber) {
+        LOGGER.debug("fetchCard method start");
         CardEntity cards = cardRepository.findByMobileNumber(mobileNumber).orElseThrow(
                 () -> new NotFoundException("Card not found with mobile number: " + mobileNumber)
         );
+        LOGGER.debug("fetchCard method end");
         return CardsMapper.mapToCardsDto(cards);
     }
 
     @Override
     public boolean updateCard(CardDto cardDto) {
+        LOGGER.debug("updateCard method start");
         CardEntity cards = cardRepository.findByCardNumber(cardDto.cardNumber()).orElseThrow(
                 () -> new NotFoundException("Card not found with card number: " + cardDto.cardNumber())
         );
         CardsMapper.mapToCards(cardDto, cards);
         cardRepository.save(cards);
+        LOGGER.debug("updateCard method end");
         return true;
     }
 
     @Override
     public boolean deleteCard(String mobileNumber) {
+        LOGGER.debug("deleteCard method start");
         CardEntity cards = cardRepository.findByMobileNumber(mobileNumber).orElseThrow(
                 () -> new NotFoundException("Card not found with mobile number: " + mobileNumber)
         );
         cardRepository.deleteById(cards.getCardId());
+        LOGGER.debug("deleteCard method end");
         return true;
     }
 }
