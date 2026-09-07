@@ -19,6 +19,11 @@ spring:
           httpclient:
             connect-timeout: 1000
             response-timeout: 10s
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: ${SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI:http://localhost:7080/realms/master/protocol/openid-connect/certs}
 
 bank:
   gateway:
