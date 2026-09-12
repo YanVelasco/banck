@@ -184,7 +184,7 @@ services:
       - bank-network
 
   gatewayserver:
-    image: yanvelasco/gatewayserver:v4
+    image: yanvelasco/gatewayserver:v5
     container_name: gatewayserver
     ports:
       - "8072:8072"
@@ -225,12 +225,11 @@ services:
       - OTEL_LOGS_EXPORTER=none
       - OTEL_METRICS_EXPORTER=none
       - OTEL_TRACES_EXPORTER=otlp
+      - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI=http://keycloak:8080/realms/master/protocol/openid-connect/certs
 
   accounts:
     image: yanvelasco/accounts:v6
     container_name: accounts
-    ports:
-      - "8080:8080"
     depends_on:
       config-server:
         condition: service_healthy
@@ -270,8 +269,6 @@ services:
   loans:
     image: yanvelasco/loans:v7
     container_name: loans
-    ports:
-      - "8090:8090"
     depends_on:
       config-server:
         condition: service_healthy
@@ -311,8 +308,6 @@ services:
   cards:
     image: yanvelasco/cards:v7
     container_name: cards
-    ports:
-      - "9000:9000"
     depends_on:
       config-server:
         condition: service_healthy
