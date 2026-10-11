@@ -32,4 +32,14 @@ public class AccountEntity extends BaseEntity implements Serializable {
     @Column(name = "branch_address", nullable = false)
     private String branchAddress;
 
+    @Column(name = "communication_status", nullable = false)
+    private Boolean communicationStatus;
+
+    @PrePersist
+    public void prePersist() {
+        if (communicationStatus == null) {
+            communicationStatus = false;
+        }
+    }
+
 }

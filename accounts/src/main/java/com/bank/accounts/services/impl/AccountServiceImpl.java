@@ -1,5 +1,6 @@
 package com.bank.accounts.services.impl;
 
+import com.bank.accounts.dtos.AccountsMsgDto;
 import com.bank.accounts.dtos.CustomerDto;
 import com.bank.accounts.entities.AccountEntity;
 import com.bank.accounts.entities.CustomerEntity;
@@ -13,30 +14,31 @@ import com.bank.accounts.repositories.CustomerRepository;
 import com.bank.accounts.services.IAccountService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.cloud.stream.function.StreamBridge;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.concurrent.ThreadLocalRandom;
 
 @Service
 public class AccountServiceImpl implements IAccountService {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(AccountServiceImpl.class);
+    private static final Logger log = LoggerFactory.getLogger(AccountServiceImpl.class);
 
     private final CustomerRepository customerRepository;
     private final AccountRepository accountRepository;
+    private final StreamBridge streamBridge;
 
-    public AccountServiceImpl(CustomerRepository customerRepository, AccountRepository accountRepository) {
+    public AccountServiceImpl(CustomerRepository customerRepository, AccountRepository accountRepository, StreamBridge streamBridge) {
         this.customerRepository = customerRepository;
         this.accountRepository = accountRepository;
+        this.streamBridge = streamBridge;
     }
 
     @Transactional
     @Override
     public void createAccount(CustomerDto customerDto) {
-        LOGGER.debug("createAccount method start");
+        log.debug("createAccount method start");
         customerRepository.findByMobileNumberOrEmail(customerDto.mobileNumber(), customerDto.email()).ifPresent(existingCustomer -> {
             throw new AlreadyExistsException("Customer with mobile number " + customerDto.mobileNumber() + " or email " + customerDto.email() + " already exists.");
         });
@@ -45,24 +47,37 @@ public class AccountServiceImpl implements IAccountService {
         customerRepository.save(customerEntity);
 
         AccountEntity accountEntity = createAccountEntity(customerEntity);
-        accountRepository.save(accountEntity);
-        LOGGER.debug("createAccount method end");
+        var savedAccount = accountRepository.save(accountEntity);
+        sendCommunication(savedAccount, customerEntity);
+        log.debug("createAccount method end");
+    }
+
+    private void sendCommunication(AccountEntity accountEntity, CustomerEntity customerEntity) {
+        var accountsMsgDto = AccountsMsgDto.builder()
+                .accountNumber(accountEntity.getAccountNumber())
+                .name(customerEntity.getName())
+                .email(customerEntity.getEmail())
+                .mobileNumber(customerEntity.getMobileNumber())
+                .build();
+        log.debug("Sending account creation message to stream: {}", accountsMsgDto);
+        var result = streamBridge.send("sendCommunication-out-0", accountsMsgDto);
+        log.debug("Is message sent successfully? {}", result);
     }
 
     @Override
     public CustomerDto fetchAccountDetails(String mobileNumber) {
-        LOGGER.debug("fetchAccountDetails method start");
+        log.debug("fetchAccountDetails method start");
         var customerEntity = customerRepository.findByMobileNumber(mobileNumber)
                 .orElseThrow(() -> new NotFoundException("Customer with mobile number " + mobileNumber + " not found."));
         var account = accountRepository.findByCustomerId(customerEntity.getCustomerId())
                 .orElseThrow(() -> new NotFoundException("Account for customer with mobile number " + mobileNumber + " not found."));
-        LOGGER.debug("fetchAccountDetails method end");
+        log.debug("fetchAccountDetails method end");
         return CustomerMapper.toCustomerDto(customerEntity, account);
     }
 
     @Override
     public boolean updateAccountDetails(CustomerDto customerDto) {
-        LOGGER.debug("updateAccountDetails method start");
+        log.debug("updateAccountDetails method start");
         var isUpdated = false;
 
         var accountDto = customerDto.accountDto();
@@ -81,21 +96,34 @@ public class AccountServiceImpl implements IAccountService {
             isUpdated = true;
         }
 
-        LOGGER.debug("updateAccountDetails method end");
+        log.debug("updateAccountDetails method end");
         return isUpdated;
     }
 
     @Override
     public boolean deleteAccount(String mobileNumber) {
-        LOGGER.debug("deleteAccount method start");
+        log.debug("deleteAccount method start");
         var customerEntity = customerRepository.findByMobileNumber(mobileNumber)
                 .orElseThrow(() -> new NotFoundException("Customer with mobile number " + mobileNumber + " not found."));
 
         accountRepository.deleteByCustomerId(customerEntity.getCustomerId());
         customerRepository.deleteById(customerEntity.getCustomerId());
 
-        LOGGER.debug("deleteAccount method end");
+        log.debug("deleteAccount method end");
         return true;
+    }
+
+    @Override
+    public boolean updateCommunicationStatus(Long accountNumber) {
+        boolean isUpdated = false;
+        if(accountNumber!= null) {
+            var accountEntity = accountRepository.findByAccountNumber(accountNumber)
+                    .orElseThrow(() -> new NotFoundException("Account with account number " + accountNumber + " not found."));
+            accountEntity.setCommunicationStatus(true);
+            accountRepository.save(accountEntity);
+            isUpdated = true;
+        }
+        return isUpdated;
     }
 
     private AccountEntity createAccountEntity(CustomerEntity customerEntity) {

@@ -171,6 +171,32 @@ services:
     networks:
       - bank-network
 
+  rabbitmq:
+    image: rabbitmq:4.2.3-management-alpine
+    container_name: rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: bank
+      RABBITMQ_DEFAULT_PASS: bank
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    healthcheck:
+      test: [ "CMD", "rabbitmq-diagnostics", "-q", "ping" ]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+    networks:
+      - bank-network
+
   keycloak:
     image: quay.io/keycloak/keycloak:26.7.3
     container_name: keycloak
@@ -237,6 +263,8 @@ services:
         condition: service_healthy
       eurekaserver:
         condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
     deploy:
       resources:
         limits:
@@ -251,6 +279,9 @@ services:
       - SPRING_APPLICATION_NAME=accounts
       - SPRING_CONFIG_IMPORT=configserver:http://config-server:8071/
       - SPRING_PROFILES_ACTIVE=default
+      - SPRING_RABBITMQ_HOST=rabbitmq
+      - SPRING_RABBITMQ_USERNAME=bank
+      - SPRING_RABBITMQ_PASSWORD=bank
       - EUREKA_INSTANCE_HOSTNAME=accounts
       - EUREKA_INSTANCE_PREFER_IP_ADDRESS=false
       - SPRING_DATASOURCE_URL=jdbc:mysql://mysql-accounts:3306/accountsdb
