@@ -171,17 +171,28 @@ services:
     networks:
       - bank-network
 
-  rabbitmq:
-    image: rabbitmq:4.2.3-management-alpine
-    container_name: rabbitmq
+  kafka:
+    image: apache/kafka:4.1.1
+    container_name: kafka
     environment:
-      RABBITMQ_DEFAULT_USER: bank
-      RABBITMQ_DEFAULT_PASS: bank
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_LISTENERS: PLAINTEXT://:29092,CONTROLLER://:29093,EXTERNAL://:9092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,EXTERNAL://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,EXTERNAL:PLAINTEXT
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:29093
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      KAFKA_HEAP_OPTS: -Xms256m -Xmx512m
     ports:
-      - "5672:5672"
-      - "15672:15672"
+      - "9092:9092"
     healthcheck:
-      test: [ "CMD", "rabbitmq-diagnostics", "-q", "ping" ]
+      test: [ "CMD", "/opt/kafka/bin/kafka-topics.sh", "--bootstrap-server", "localhost:9092", "--list" ]
       interval: 30s
       timeout: 10s
       retries: 10
@@ -189,11 +200,11 @@ services:
     deploy:
       resources:
         limits:
+          cpus: '1.00'
+          memory: 1G
+        reservations:
           cpus: '0.50'
           memory: 512M
-        reservations:
-          cpus: '0.25'
-          memory: 256M
     networks:
       - bank-network
 
@@ -263,7 +274,7 @@ services:
         condition: service_healthy
       eurekaserver:
         condition: service_healthy
-      rabbitmq:
+      kafka:
         condition: service_healthy
     deploy:
       resources:
@@ -279,9 +290,7 @@ services:
       - SPRING_APPLICATION_NAME=accounts
       - SPRING_CONFIG_IMPORT=configserver:http://config-server:8071/
       - SPRING_PROFILES_ACTIVE=default
-      - SPRING_RABBITMQ_HOST=rabbitmq
-      - SPRING_RABBITMQ_USERNAME=bank
-      - SPRING_RABBITMQ_PASSWORD=bank
+      - SPRING_CLOUD_STREAM_KAFKA_BINDER_BROKERS=kafka:29092
       - EUREKA_INSTANCE_HOSTNAME=accounts
       - EUREKA_INSTANCE_PREFER_IP_ADDRESS=false
       - SPRING_DATASOURCE_URL=jdbc:mysql://mysql-accounts:3306/accountsdb
@@ -304,7 +313,7 @@ services:
     ports:
       - "9010:9010"
     depends_on:
-      rabbitmq:
+      kafka:
         condition: service_healthy
     deploy:
       resources:
@@ -318,10 +327,7 @@ services:
       - bank-network
     environment:
       - SPRING_APPLICATION_NAME=message
-      - SPRING_RABBITMQ_HOST=rabbitmq
-      - SPRING_RABBITMQ_PORT=5672
-      - SPRING_RABBITMQ_USERNAME=bank
-      - SPRING_RABBITMQ_PASSWORD=bank
+      - SPRING_CLOUD_STREAM_KAFKA_BINDER_BROKERS=kafka:29092
 
   loans:
     image: yanvelasco/loans:v7
