@@ -265,7 +265,7 @@ services:
       - SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI=http://keycloak:8080/realms/master/protocol/openid-connect/certs
 
   accounts:
-    image: yanvelasco/accounts:v7
+    image: yanvelasco/accounts:v8
     container_name: accounts
     depends_on:
       config-server:
@@ -308,7 +308,7 @@ services:
       - OTEL_TRACES_EXPORTER=otlp
 
   message:
-    image: yanvelasco/message:v1
+    image: yanvelasco/message:v2
     container_name: message
     ports:
       - "9010:9010"
