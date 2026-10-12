@@ -11,7 +11,7 @@ COPY src ./src/
 RUN --mount=type=cache,target=/root/.m2 mvn -B -q -Dmaven.test.skip=true package
 
 # Extract Spring Boot layers for better image layer caching
-RUN java -Djarmode=tools -jar target/loans-0.0.1-SNAPSHOT.jar extract --layers --launcher --destination extracted
+RUN java -Djarmode=tools -jar target/message-0.0.1-SNAPSHOT.jar extract --layers --launcher --destination extracted
 
 FROM eclipse-temurin:21-jre-jammy
 WORKDIR /app
@@ -23,13 +23,12 @@ RUN apt-get update \
     && useradd --system --create-home --home-dir /home/spring --gid spring spring \
     && chown -R spring:spring /app
 
-COPY --from=build /workspace/target/otel/opentelemetry-javaagent.jar /app/libs/opentelemetry-javaagent.jar
 COPY --from=build /workspace/extracted/dependencies/ ./
 COPY --from=build /workspace/extracted/spring-boot-loader/ ./
 COPY --from=build /workspace/extracted/snapshot-dependencies/ ./
 COPY --from=build /workspace/extracted/application/ ./
 
-EXPOSE 8090
+EXPOSE 9010
 
 ENV HOME=/home/spring
 
