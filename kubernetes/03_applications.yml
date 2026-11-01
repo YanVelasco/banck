@@ -1,0 +1,462 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: config-server
+  namespace: bank
+spec:
+  selector:
+    app: config-server
+  ports:
+    - port: 8071
+      targetPort: 8071
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: config-server
+  namespace: bank
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: config-server
+  template:
+    metadata:
+      labels:
+        app: config-server
+    spec:
+      containers:
+        - name: config-server
+          image: yanvelasco/config-server:v4
+          resources:
+            requests:
+              cpu: 250m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          ports:
+            - name: http
+              containerPort: 8071
+          env:
+            - name: JAVA_TOOL_OPTIONS
+              value: -javaagent:/app/libs/opentelemetry-javaagent.jar
+            - name: OTEL_SERVICE_NAME
+              value: configserver
+            - name: OTEL_EXPORTER_OTLP_ENDPOINT
+              value: http://tempo:4318
+            - name: OTEL_EXPORTER_OTLP_PROTOCOL
+              value: http/protobuf
+            - name: OTEL_LOGS_EXPORTER
+              value: none
+            - name: OTEL_METRICS_EXPORTER
+              value: none
+            - name: OTEL_TRACES_EXPORTER
+              value: otlp
+          startupProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8071
+            periodSeconds: 10
+            failureThreshold: 30
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8071
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: eurekaserver
+  namespace: bank
+spec:
+  selector:
+    app: eurekaserver
+  ports:
+    - port: 8070
+      targetPort: 8070
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: eurekaserver
+  namespace: bank
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: eurekaserver
+  template:
+    metadata:
+      labels:
+        app: eurekaserver
+    spec:
+      containers:
+        - name: eurekaserver
+          image: yanvelasco/eurekaserver:v4
+          resources:
+            requests:
+              cpu: 250m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          ports:
+            - name: http
+              containerPort: 8070
+          envFrom:
+            - configMapRef:
+                name: bank-app-config
+          env:
+            - name: SPRING_APPLICATION_NAME
+              value: eurekaserver
+            - name: SPRING_CONFIG_IMPORT
+              value: optional:configserver:http://config-server:8071/
+            - name: JAVA_TOOL_OPTIONS
+              value: -javaagent:/app/libs/opentelemetry-javaagent.jar
+            - name: OTEL_SERVICE_NAME
+              value: eurekaserver
+          startupProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8070
+            periodSeconds: 10
+            failureThreshold: 30
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8070
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: accounts
+  namespace: bank
+spec:
+  selector:
+    app: accounts
+  ports:
+    - port: 8080
+      targetPort: 8080
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: accounts
+  namespace: bank
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: accounts
+  template:
+    metadata:
+      labels:
+        app: accounts
+    spec:
+      containers:
+        - name: accounts
+          image: yanvelasco/accounts:v8
+          resources:
+            requests:
+              cpu: 250m
+              memory: 512Mi
+            limits:
+              cpu: 500m
+              memory: 1Gi
+          ports:
+            - name: http
+              containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: bank-app-config
+          env:
+            - name: SPRING_APPLICATION_NAME
+              value: accounts
+            - name: SPRING_CONFIG_IMPORT
+              value: configserver:http://config-server:8071/
+            - name: SPRING_DATASOURCE_URL
+              value: jdbc:mysql://mysql-accounts:3306/accountsdb
+            - name: SPRING_DATASOURCE_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: bank-secrets
+                  key: mysql-username
+            - name: SPRING_DATASOURCE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: bank-secrets
+                  key: mysql-password
+            - name: JAVA_TOOL_OPTIONS
+              value: -javaagent:/app/libs/opentelemetry-javaagent.jar
+            - name: EUREKA_INSTANCE_HOSTNAME
+              value: accounts
+            - name: EUREKA_INSTANCE_PREFER_IP_ADDRESS
+              value: "false"
+            - name: OTEL_SERVICE_NAME
+              value: accounts
+          startupProbe:
+            tcpSocket:
+              port: 8080
+            periodSeconds: 10
+            failureThreshold: 30
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8080
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: loans
+  namespace: bank
+spec:
+  selector:
+    app: loans
+  ports:
+    - port: 8090
+      targetPort: 8090
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: loans
+  namespace: bank
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: loans
+  template:
+    metadata:
+      labels:
+        app: loans
+    spec:
+      containers:
+        - name: loans
+          image: yanvelasco/loans:v7
+          resources:
+            requests:
+              cpu: 250m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 768Mi
+          ports:
+            - name: http
+              containerPort: 8090
+          envFrom:
+            - configMapRef:
+                name: bank-app-config
+          env:
+            - name: SPRING_APPLICATION_NAME
+              value: loans
+            - name: SPRING_CONFIG_IMPORT
+              value: configserver:http://config-server:8071/
+            - name: SPRING_DATASOURCE_URL
+              value: jdbc:mysql://mysql-loans:3306/loansdb
+            - name: SPRING_DATASOURCE_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: bank-secrets
+                  key: mysql-username
+            - name: SPRING_DATASOURCE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: bank-secrets
+                  key: mysql-password
+            - name: JAVA_TOOL_OPTIONS
+              value: -javaagent:/app/libs/opentelemetry-javaagent.jar
+            - name: EUREKA_INSTANCE_HOSTNAME
+              value: loans
+            - name: EUREKA_INSTANCE_PREFER_IP_ADDRESS
+              value: "false"
+            - name: OTEL_SERVICE_NAME
+              value: loans
+          startupProbe:
+            tcpSocket:
+              port: 8090
+            periodSeconds: 10
+            failureThreshold: 30
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8090
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: cards
+  namespace: bank
+spec:
+  selector:
+    app: cards
+  ports:
+    - port: 9000
+      targetPort: 9000
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cards
+  namespace: bank
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cards
+  template:
+    metadata:
+      labels:
+        app: cards
+    spec:
+      containers:
+        - name: cards
+          image: yanvelasco/cards:v7
+          resources:
+            requests:
+              cpu: 250m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          ports:
+            - name: http
+              containerPort: 9000
+          envFrom:
+            - configMapRef:
+                name: bank-app-config
+          env:
+            - name: SPRING_APPLICATION_NAME
+              value: cards
+            - name: SPRING_CONFIG_IMPORT
+              value: configserver:http://config-server:8071/
+            - name: SPRING_DATASOURCE_URL
+              value: jdbc:mysql://mysql-cards:3306/cardsdb
+            - name: SPRING_DATASOURCE_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: bank-secrets
+                  key: mysql-username
+            - name: SPRING_DATASOURCE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: bank-secrets
+                  key: mysql-password
+            - name: JAVA_TOOL_OPTIONS
+              value: -javaagent:/app/libs/opentelemetry-javaagent.jar
+            - name: EUREKA_INSTANCE_HOSTNAME
+              value: cards
+            - name: EUREKA_INSTANCE_PREFER_IP_ADDRESS
+              value: "false"
+            - name: OTEL_SERVICE_NAME
+              value: cards
+          startupProbe:
+            tcpSocket:
+              port: 9000
+            periodSeconds: 10
+            failureThreshold: 30
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 9000
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: message
+  namespace: bank
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: message
+  template:
+    metadata:
+      labels:
+        app: message
+    spec:
+      containers:
+        - name: message
+          image: yanvelasco/message:v2
+          resources:
+            requests:
+              cpu: 250m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          envFrom:
+            - configMapRef:
+                name: bank-app-config
+          env:
+            - name: SPRING_APPLICATION_NAME
+              value: message
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: gatewayserver
+  namespace: bank
+spec:
+  selector:
+    app: gatewayserver
+  ports:
+    - port: 8072
+      targetPort: 8072
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gatewayserver
+  namespace: bank
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: gatewayserver
+  template:
+    metadata:
+      labels:
+        app: gatewayserver
+    spec:
+      containers:
+        - name: gatewayserver
+          image: yanvelasco/gatewayserver:v5
+          resources:
+            requests:
+              cpu: 250m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          ports:
+            - name: http
+              containerPort: 8072
+          envFrom:
+            - configMapRef:
+                name: bank-app-config
+          env:
+            - name: SPRING_APPLICATION_NAME
+              value: gatewayserver
+            - name: SPRING_CONFIG_IMPORT
+              value: configserver:http://config-server:8071/
+            - name: SPRING_DATA_REDIS_HOST
+              value: redis
+            - name: SPRING_DATA_REDIS_PORT
+              value: "6379"
+            - name: SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI
+              value: http://keycloak:8080/realms/master/protocol/openid-connect/certs
+            - name: JAVA_TOOL_OPTIONS
+              value: -javaagent:/app/libs/opentelemetry-javaagent.jar
+            - name: OTEL_SERVICE_NAME
+              value: gatewayserver
+          startupProbe:
+            tcpSocket:
+              port: 8072
+            periodSeconds: 10
+            failureThreshold: 30
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8072

@@ -1,0 +1,300 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: bank-secrets
+  namespace: bank
+type: Opaque
+stringData:
+  mysql-root-password: root
+  mysql-username: bank
+  mysql-password: bank
+  keycloak-admin-username: admin
+  keycloak-admin-password: admin
+  minio-root-user: minioadmin
+  minio-root-password: minioadmin
+  grafana-admin-password: admin
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: bank-app-config
+  namespace: bank
+data:
+  SPRING_PROFILES_ACTIVE: default
+  EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eurekaserver:8070/eureka/
+  SPRING_CLOUD_STREAM_KAFKA_BINDER_BROKERS: kafka:29092
+  SPRING_DATASOURCE_DRIVER_CLASS_NAME: com.mysql.cj.jdbc.Driver
+  SPRING_JPA_DATABASE_PLATFORM: org.hibernate.dialect.MySQLDialect
+  OTEL_EXPORTER_OTLP_ENDPOINT: http://tempo:4318
+  OTEL_EXPORTER_OTLP_PROTOCOL: http/protobuf
+  OTEL_LOGS_EXPORTER: none
+  OTEL_METRICS_EXPORTER: none
+  OTEL_TRACES_EXPORTER: otlp
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: loki-config
+  namespace: bank
+data:
+  local-config.yaml: |
+    auth_enabled: true
+    server:
+      http_listen_port: 3100
+      grpc_listen_port: 9095
+      log_level: info
+    common:
+      path_prefix: /loki
+      storage:
+        filesystem:
+          chunks_directory: /loki/chunks
+          rules_directory: /loki/rules
+      replication_factor: 1
+      ring:
+        kvstore:
+          store: inmemory
+    schema_config:
+      configs:
+        - from: 2024-01-01
+          store: tsdb
+          object_store: filesystem
+          schema: v13
+          index:
+            prefix: index_
+            period: 24h
+    storage_config:
+      filesystem:
+        directory: /loki/chunks
+    limits_config:
+      reject_old_samples: true
+      reject_old_samples_max_age: 168h
+      allow_structured_metadata: false
+    table_manager:
+      retention_deletes_enabled: false
+      retention_period: 0s
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: tempo-config
+  namespace: bank
+data:
+  tempo.yml: |
+    server:
+      http_listen_port: 3200
+      grpc_listen_port: 9095
+      log_level: info
+    distributor:
+      receivers:
+        otlp:
+          protocols:
+            grpc:
+              endpoint: 0.0.0.0:4317
+            http:
+              endpoint: 0.0.0.0:4318
+    ingester:
+      max_block_duration: 5m
+      max_block_bytes: 1000000
+      trace_idle_period: 10m
+      complete_block_timeout: 15m
+    compactor:
+      compaction:
+        block_retention: 48h
+        compacted_block_retention: 1h
+        compaction_window: 1h
+        max_compaction_objects: 1000000
+    querier:
+      max_concurrent_queries: 20
+    query_frontend:
+      search:
+        concurrent_jobs: 1000
+      trace_by_id:
+        query_shards: 50
+    storage:
+      trace:
+        backend: local
+        local:
+          path: /var/tempo/blocks
+        wal:
+          path: /var/tempo/wal
+        pool:
+          max_workers: 100
+          queue_depth: 10000
+    overrides:
+      defaults:
+        ingestion:
+          rate_limit_bytes: 15000000
+          burst_size_bytes: 20000000
+          max_traces_per_user: 10000
+        global:
+          max_bytes_per_trace: 5000000
+    usage_report:
+      reporting_enabled: false
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: alloy-config
+  namespace: bank
+data:
+  config.alloy: |
+    discovery.kubernetes "pods" {
+      role = "pod"
+    }
+
+    discovery.relabel "pod_logs" {
+      targets = discovery.kubernetes.pods.targets
+
+      rule {
+        source_labels = ["__meta_kubernetes_namespace"]
+        target_label  = "namespace"
+      }
+
+      rule {
+        source_labels = ["__meta_kubernetes_pod_name"]
+        target_label  = "pod"
+      }
+
+      rule {
+        source_labels = ["__meta_kubernetes_pod_container_name"]
+        target_label  = "container"
+      }
+    }
+
+    loki.source.kubernetes "pods" {
+      targets    = discovery.relabel.pod_logs.output
+      forward_to = [loki.write.default.receiver]
+    }
+
+    otelcol.receiver.otlp "default" {
+      http {
+        endpoint = "0.0.0.0:4318"
+      }
+
+      output {
+        logs = [otelcol.processor.batch.default.input]
+      }
+    }
+
+    otelcol.processor.batch "default" {
+      output {
+        logs = [otelcol.exporter.loki.default.input]
+      }
+    }
+
+    otelcol.exporter.loki "default" {
+      forward_to = [loki.write.default.receiver]
+    }
+
+    loki.write "default" {
+      endpoint {
+        url       = "http://loki:3100/loki/api/v1/push"
+        tenant_id = "bank"
+      }
+
+      external_labels = {
+        instance = "alloy",
+      }
+    }
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-config
+  namespace: bank
+data:
+  prometheus.yml: |
+    global:
+      scrape_interval: 5s
+      evaluation_interval: 5s
+    scrape_configs:
+      - job_name: prometheus
+        static_configs:
+          - targets: ["localhost:9090"]
+      - job_name: accounts
+        metrics_path: /actuator/prometheus
+        static_configs:
+          - targets: ["accounts:8080"]
+      - job_name: loans
+        metrics_path: /actuator/prometheus
+        static_configs:
+          - targets: ["loans:8090"]
+      - job_name: cards
+        metrics_path: /actuator/prometheus
+        static_configs:
+          - targets: ["cards:9000"]
+      - job_name: gatewayserver
+        metrics_path: /actuator/prometheus
+        static_configs:
+          - targets: ["gatewayserver:8072"]
+      - job_name: eurekaserver
+        metrics_path: /actuator/prometheus
+        static_configs:
+          - targets: ["eurekaserver:8070"]
+      - job_name: config-server
+        metrics_path: /actuator/prometheus
+        static_configs:
+          - targets: ["config-server:8071"]
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-datasources
+  namespace: bank
+data:
+  loki.yml: |
+    apiVersion: 1
+    datasources:
+      - name: Loki
+        uid: loki
+        type: loki
+        access: proxy
+        orgId: 1
+        url: http://loki:3100
+        isDefault: true
+        editable: true
+        jsonData:
+          httpHeaderName1: X-Scope-OrgID
+          derivedFields:
+            - datasourceUid: tempo
+              matcherRegex: '\[.+,(.+),.+\]'
+              name: traceID
+              url: '$${__value.raw}'
+        secureJsonData:
+          httpHeaderValue1: bank
+  prometheus.yml: |
+    apiVersion: 1
+    datasources:
+      - name: Prometheus
+        uid: prometheus
+        type: prometheus
+        access: proxy
+        url: http://prometheus:9090
+        isDefault: false
+        basicAuth: false
+        editable: true
+        version: 1
+        orgId: 1
+        jsonData:
+          httpMethod: GET
+  tempo.yml: |
+    apiVersion: 1
+    datasources:
+      - name: Tempo
+        uid: tempo
+        type: tempo
+        access: proxy
+        orgId: 1
+        url: http://tempo:3200
+        isDefault: false
+        editable: true
+        jsonData:
+          tracesToLogsV2:
+            datasourceUid: loki
+            spanStartTimeShift: "-5m"
+            spanEndTimeShift: "5m"
+            filterByTraceID: true
+          nodeGraph:
+            enabled: true
+          lokiSearch:
+            datasourceUid: loki
