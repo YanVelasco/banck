@@ -33,6 +33,10 @@ sign-in, or run it manually from PowerShell. It writes logs to
 Keycloak at `http://localhost:8080`; its log is
 `%LOCALAPPDATA%\Banck\keycloak-port-forward.log`.
 
+`kafka-port-forward.ps1` keeps the Kafka external listener available at
+`localhost:9092`; use that as the bootstrap server for local clients. Its log
+is `%LOCALAPPDATA%\Banck\kafka-port-forward.log`.
+
 The Secret uses the development credentials from the Compose setup. Kubernetes
 Secrets are not encrypted in Git or by base64 encoding; replace these defaults
 and configure encryption at rest or an external secret manager before using
