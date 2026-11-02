@@ -24,6 +24,15 @@ kubectl -n bank port-forward svc/grafana 3000:3000
 kubectl -n bank port-forward svc/kafka 9092:9092
 ```
 
+On Windows, `gateway-port-forward.ps1` can keep the Gateway tunnel running and
+retry it if the connection drops. Register it in Task Scheduler to start at
+sign-in, or run it manually from PowerShell. It writes logs to
+`%LOCALAPPDATA%\Banck\gateway-port-forward.log`.
+
+`keycloak-port-forward.ps1` provides the same automatic tunnel and retry for
+Keycloak at `http://localhost:8080`; its log is
+`%LOCALAPPDATA%\Banck\keycloak-port-forward.log`.
+
 The Secret uses the development credentials from the Compose setup. Kubernetes
 Secrets are not encrypted in Git or by base64 encoding; replace these defaults
 and configure encryption at rest or an external secret manager before using
