@@ -399,11 +399,13 @@ metadata:
   name: gatewayserver
   namespace: bank
 spec:
+  type: NodePort
   selector:
     app: gatewayserver
   ports:
     - port: 8072
       targetPort: 8072
+      nodePort: 30072
 ---
 apiVersion: apps/v1
 kind: Deployment

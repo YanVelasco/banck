@@ -258,9 +258,21 @@ spec:
     - name: controller
       port: 29093
       targetPort: 29093
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kafka-external
+  namespace: bank
+spec:
+  type: NodePort
+  selector:
+    app: kafka
+  ports:
     - name: external
       port: 9092
       targetPort: 9092
+      nodePort: 30092
 ---
 apiVersion: apps/v1
 kind: StatefulSet
@@ -303,7 +315,7 @@ spec:
             - name: KAFKA_LISTENERS
               value: INTERNAL://:29092,CONTROLLER://:29093,EXTERNAL://:9092
             - name: KAFKA_ADVERTISED_LISTENERS
-              value: INTERNAL://kafka-0.kafka.bank.svc.cluster.local:29092,EXTERNAL://localhost:9092
+              value: INTERNAL://kafka-0.kafka.bank.svc.cluster.local:29092,EXTERNAL://localhost:30092
             - name: KAFKA_LISTENER_SECURITY_PROTOCOL_MAP
               value: CONTROLLER:PLAINTEXT,INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT
             - name: KAFKA_CONTROLLER_LISTENER_NAMES
@@ -420,11 +432,13 @@ metadata:
   name: keycloak
   namespace: bank
 spec:
+  type: NodePort
   selector:
     app: keycloak
   ports:
     - port: 8080
       targetPort: 8080
+      nodePort: 30080
 ---
 apiVersion: apps/v1
 kind: Deployment

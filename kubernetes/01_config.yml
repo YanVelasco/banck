@@ -20,7 +20,7 @@ metadata:
   name: bank-app-config
   namespace: bank
 data:
-  SPRING_PROFILES_ACTIVE: default
+  SPRING_PROFILES_ACTIVE: prod
   EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eurekaserver:8070/eureka/
   SPRING_CLOUD_STREAM_KAFKA_BINDER_BROKERS: kafka:29092
   SPRING_DATASOURCE_DRIVER_CLASS_NAME: com.mysql.cj.jdbc.Driver
