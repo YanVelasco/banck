@@ -51,7 +51,24 @@ instalar apenas um serviço diretamente, por exemplo:
 helm upgrade --install accounts .\helm-bank\bank-service\accounts --namespace bank
 ```
 
-O gateway é exposto em `http://localhost:30072`. Os microsserviços de banco
-leem usuário e senha das chaves `mysql-username` e `mysql-password` do Secret
-`bank-secrets`. Não instale o chart agregador junto com outra instalação que
+No Windows, você pode manter o gateway acessível em `http://localhost:8072`
+sem iniciar o `kubectl port-forward` manualmente em cada sessão. Registre uma
+tarefa agendada para iniciá-lo no login do usuário:
+
+```powershell
+$script = (Resolve-Path .\helm-bank\scripts\start-gateway-port-forward.ps1).Path
+$user = "$env:USERDOMAIN\$env:USERNAME"
+$action = New-ScheduledTaskAction -Execute "powershell.exe" -Argument "-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File `"$script`""
+$trigger = New-ScheduledTaskTrigger -AtLogOn -User $user
+$settings = New-ScheduledTaskSettingsSet -ExecutionTimeLimit ([TimeSpan]::Zero) -RestartCount 999 -RestartInterval (New-TimeSpan -Minutes 1)
+Register-ScheduledTask -TaskName "Bank Gateway Port Forward" -Action $action -Trigger $trigger -Settings $settings -Description "Keeps the Bank gateway available at localhost:8072" -Force
+Start-ScheduledTask -TaskName "Bank Gateway Port Forward"
+```
+
+O script verifica `/actuator/health` e reabre o encaminhamento se necessário.
+O log fica em `$env:LOCALAPPDATA\Bank\gateway-port-forward.log`. A tarefa
+funciona enquanto o usuário estiver conectado ao Windows e o cluster Docker
+Desktop estiver ativo. Os microsserviços de banco leem usuário e senha das
+chaves `mysql-username` e `mysql-password` do Secret `bank-secrets`. Não instale
+o chart agregador junto com outra instalação que
 já gerencie os mesmos Deployments e Services.
