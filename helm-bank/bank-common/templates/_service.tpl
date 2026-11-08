@@ -3,17 +3,18 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ .Chart.Name }}
+  name: {{ .Values.serviceName }}
+  namespace: {{ .Release.Namespace }}
   labels:
-    {{- include "bank-common.labels" . | nindent 4 }}
+    {{- include "bank-common.labels" (dict "ctx" . "name" .Values.appLabel) | nindent 4 }}
 spec:
   type: {{ default "ClusterIP" .Values.service.type }}
   selector:
-    app: {{ .Chart.Name }}
+    app: {{ .Values.appLabel }}
   ports:
     - name: http
       port: {{ .Values.service.port }}
-      targetPort: http
+      targetPort: {{ .Values.service.targetPort }}
       protocol: TCP
       {{- with .Values.service.nodePort }}
       nodePort: {{ . }}

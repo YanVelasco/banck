@@ -1,0 +1,52 @@
+deploymentName: loans
+serviceName: loans
+appLabel: loans
+
+replicaCount: 1
+
+image:
+  repository: yanvelasco/loans
+  tag: v7
+
+imagePullPolicy: IfNotPresent
+containerPort: 8090
+
+service:
+  enabled: true
+  port: 8090
+  targetPort: 8090
+
+profileEnabled: true
+configImportEnabled: true
+eurekaEnabled: true
+databaseEnabled: true
+jwkEnabled: false
+redisEnabled: false
+kafkaEnabled: false
+otelEnabled: true
+
+resources:
+  requests:
+    cpu: 250m
+    memory: 256Mi
+  limits:
+    cpu: 500m
+    memory: 768Mi
+
+startupProbe:
+  tcpSocket:
+    port: 8090
+  periodSeconds: 10
+  failureThreshold: 30
+
+readinessProbe:
+  httpGet:
+    path: /actuator/health/readiness
+    port: 8090
+  periodSeconds: 10
+
+livenessProbe:
+  httpGet:
+    path: /actuator/health/liveness
+    port: 8090
+  periodSeconds: 15

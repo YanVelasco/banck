@@ -1,0 +1,53 @@
+deploymentName: config-server
+serviceName: config-server
+appLabel: config-server
+
+replicaCount: 1
+
+image:
+  repository: yanvelasco/config-server
+  tag: v4
+
+imagePullPolicy: IfNotPresent
+containerPort: 8071
+
+service:
+  enabled: true
+  port: 8071
+  targetPort: 8071
+
+profileEnabled: false
+configImportEnabled: false
+eurekaEnabled: false
+databaseEnabled: false
+jwkEnabled: false
+redisEnabled: false
+kafkaEnabled: false
+otelEnabled: true
+
+resources:
+  requests:
+    cpu: 250m
+    memory: 256Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi
+
+startupProbe:
+  httpGet:
+    path: /actuator/health/readiness
+    port: 8071
+  periodSeconds: 10
+  failureThreshold: 30
+
+readinessProbe:
+  httpGet:
+    path: /actuator/health/readiness
+    port: 8071
+  periodSeconds: 10
+
+livenessProbe:
+  httpGet:
+    path: /actuator/health/liveness
+    port: 8071
+  periodSeconds: 15

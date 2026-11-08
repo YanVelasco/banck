@@ -1,7 +1,7 @@
 # Helm charts do banco
 
-Cada diretório em `bank-service` contém um chart independente para o
-microsserviço correspondente. O chart agregador `bank-plataform` instala os
+Cada diretório em `bank-services` contém um chart independente para o
+microsserviço correspondente. O chart agregador `bank-platform` instala os
 sete serviços em conjunto. Imagens, portas, probes e recursos ficam no
 `values.yaml` do serviço correspondente. A biblioteca `bank-common` centraliza
 os templates reutilizáveis de `Deployment`, `Service` e labels, além de todas
@@ -9,6 +9,14 @@ as variáveis de ambiente específicas e compartilhadas em
 `bank-common/values.yaml`, agrupadas por aplicação. Os charts de serviço
 incluem essa dependência local e mantêm apenas pequenos arquivos que chamam os
 templates compartilhados.
+
+Os charts individuais seguem a estrutura de configuração do
+`helm-eazybank/eazybank-services`: `deploymentName`, `serviceName`, `appLabel`,
+`replicaCount`, imagem com `repository`/`tag`, configuração de Service,
+recursos, probes e flags de integrações. Os valores de imagem, portas,
+recursos, probes e integrações continuam sendo os específicos do Bank. O
+serviço `message` é consumidor Kafka sem endpoint HTTP e, como no manifesto
+Kubernetes do Bank, não cria um Service nem define uma porta de container.
 
 O chart agregador cria o ConfigMap `bank-app-config` e o Secret `bank-secrets`,
 usando os valores configurados em `bank-common/values.yaml`. As aplicações leem
@@ -24,7 +32,7 @@ específica de uma aplicação, use o nome do subchart seguido por
 `bank-common.applications.<serviço>.env`; por exemplo:
 
 ```powershell
-helm upgrade --install bank .\helm-bank\bank-plataform --namespace bank --create-namespace -f .\helm-bank\bank-plataform\values\values-prod.yml --set-string "accounts.bank-common.applications.accounts.env[2].value=jdbc:mysql://mysql-accounts-qa:3306/accountsdb"
+helm upgrade --install bank .\helm-bank\bank-platform --namespace bank --create-namespace -f .\helm-bank\bank-platform\values\values-prod.yml --set-string "accounts.bank-common.applications.accounts.env[2].value=jdbc:mysql://mysql-accounts-qa:3306/accountsdb"
 ```
 
 Os charts implantam as aplicações, mas esperam que os serviços de infraestrutura
@@ -33,22 +41,23 @@ Os charts implantam as aplicações, mas esperam que os serviços de infraestrut
 Na raiz do repositório, baixe/empacote as dependências locais do chart:
 
 ```powershell
-helm dependency update .\helm-bank\bank-plataform
-helm lint .\helm-bank\bank-plataform
-helm template bank .\helm-bank\bank-plataform --namespace bank -f .\helm-bank\bank-plataform\values\values-prod.yml
+helm dependency update .\helm-bank\bank-platform
+helm lint .\helm-bank\bank-platform
+helm template bank .\helm-bank\bank-platform --namespace bank -f .\helm-bank\bank-platform\values\values-prod.yml
 ```
 
 Para instalar ou atualizar em produção:
 
 ```powershell
-helm upgrade --install bank .\helm-bank\bank-plataform --namespace bank --create-namespace -f .\helm-bank\bank-plataform\values\values-prod.yml
+helm upgrade --install bank .\helm-bank\bank-platform --namespace bank --create-namespace -f .\helm-bank\bank-platform\values\values-prod.yml
 ```
 
-Para QA, substitua `values-prod.yml` por `values-qa.yml`. Também é possível
-instalar apenas um serviço diretamente, por exemplo:
+Para QA, substitua `values-prod.yml` por `values-qa.yml`. Um chart individual
+pode ser instalado diretamente, mas o ConfigMap `bank-app-config` e o Secret
+`bank-secrets` precisam já existir no namespace:
 
 ```powershell
-helm upgrade --install accounts .\helm-bank\bank-service\accounts --namespace bank
+helm upgrade --install accounts .\helm-bank\bank-services\accounts --namespace bank --set global.partOf=bank --set global.springProfile=prod
 ```
 
 No Windows, você pode manter o gateway acessível em `http://localhost:8072`

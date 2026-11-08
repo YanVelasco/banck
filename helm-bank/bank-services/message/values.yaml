@@ -1,0 +1,28 @@
+deploymentName: message
+serviceName: message
+appLabel: message
+
+replicaCount: 1
+
+image:
+  repository: yanvelasco/message
+  tag: v2
+
+imagePullPolicy: IfNotPresent
+
+profileEnabled: true
+configImportEnabled: false
+eurekaEnabled: false
+databaseEnabled: false
+jwkEnabled: false
+redisEnabled: false
+kafkaEnabled: true
+otelEnabled: false
+
+resources:
+  requests:
+    cpu: 250m
+    memory: 256Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi

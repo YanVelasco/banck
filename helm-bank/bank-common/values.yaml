@@ -1,4 +1,5 @@
 global:
+  partOf: bank
   springProfile: prod
 
 appConfig:
@@ -39,16 +40,6 @@ applications:
         value: -javaagent:/app/libs/opentelemetry-javaagent.jar
       - name: OTEL_SERVICE_NAME
         value: configserver
-      - name: OTEL_EXPORTER_OTLP_ENDPOINT
-        value: http://tempo:4318
-      - name: OTEL_EXPORTER_OTLP_PROTOCOL
-        value: http/protobuf
-      - name: OTEL_LOGS_EXPORTER
-        value: none
-      - name: OTEL_METRICS_EXPORTER
-        value: none
-      - name: OTEL_TRACES_EXPORTER
-        value: otlp
   eurekaserver:
     env:
       - name: SPRING_APPLICATION_NAME
@@ -59,8 +50,6 @@ applications:
         value: -javaagent:/app/libs/opentelemetry-javaagent.jar
       - name: OTEL_SERVICE_NAME
         value: eurekaserver
-      - name: OTEL_EXPORTER_OTLP_ENDPOINT
-        value: http://tempo:4318
   accounts:
     env:
       - name: SPRING_APPLICATION_NAME

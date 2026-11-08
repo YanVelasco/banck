@@ -1,0 +1,54 @@
+deploymentName: gatewayserver
+serviceName: gatewayserver
+appLabel: gatewayserver
+
+replicaCount: 1
+
+image:
+  repository: yanvelasco/gatewayserver
+  tag: v5
+
+imagePullPolicy: IfNotPresent
+containerPort: 8072
+
+service:
+  enabled: true
+  type: NodePort
+  port: 8072
+  targetPort: 8072
+  nodePort: 30072
+
+profileEnabled: true
+configImportEnabled: true
+eurekaEnabled: true
+databaseEnabled: false
+jwkEnabled: true
+redisEnabled: true
+kafkaEnabled: false
+otelEnabled: true
+
+resources:
+  requests:
+    cpu: 250m
+    memory: 256Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi
+
+startupProbe:
+  tcpSocket:
+    port: 8072
+  periodSeconds: 10
+  failureThreshold: 30
+
+readinessProbe:
+  httpGet:
+    path: /actuator/health/readiness
+    port: 8072
+  periodSeconds: 10
+
+livenessProbe:
+  httpGet:
+    path: /actuator/health/liveness
+    port: 8072
+  periodSeconds: 15

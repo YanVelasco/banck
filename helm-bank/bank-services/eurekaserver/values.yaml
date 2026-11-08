@@ -1,0 +1,53 @@
+deploymentName: eurekaserver
+serviceName: eurekaserver
+appLabel: eurekaserver
+
+replicaCount: 1
+
+image:
+  repository: yanvelasco/eurekaserver
+  tag: v4
+
+imagePullPolicy: IfNotPresent
+containerPort: 8070
+
+service:
+  enabled: true
+  port: 8070
+  targetPort: 8070
+
+profileEnabled: true
+configImportEnabled: true
+eurekaEnabled: false
+databaseEnabled: false
+jwkEnabled: false
+redisEnabled: false
+kafkaEnabled: false
+otelEnabled: true
+
+resources:
+  requests:
+    cpu: 250m
+    memory: 256Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi
+
+startupProbe:
+  httpGet:
+    path: /actuator/health/readiness
+    port: 8070
+  periodSeconds: 10
+  failureThreshold: 30
+
+readinessProbe:
+  httpGet:
+    path: /actuator/health/readiness
+    port: 8070
+  periodSeconds: 10
+
+livenessProbe:
+  httpGet:
+    path: /actuator/health/liveness
+    port: 8070
+  periodSeconds: 15
