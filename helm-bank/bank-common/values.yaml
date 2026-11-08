@@ -1,0 +1,161 @@
+global:
+  springProfile: prod
+
+appConfig:
+  EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eurekaserver:8070/eureka/
+  SPRING_CLOUD_STREAM_KAFKA_BINDER_BROKERS: kafka:29092
+  SPRING_DATASOURCE_DRIVER_CLASS_NAME: com.mysql.cj.jdbc.Driver
+  SPRING_JPA_DATABASE_PLATFORM: org.hibernate.dialect.MySQLDialect
+  OTEL_EXPORTER_OTLP_ENDPOINT: http://tempo:4318
+  OTEL_EXPORTER_OTLP_PROTOCOL: http/protobuf
+  OTEL_LOGS_EXPORTER: none
+  OTEL_METRICS_EXPORTER: none
+  OTEL_TRACES_EXPORTER: otlp
+
+secrets:
+  create: true
+  data:
+    mysql-root-password: root
+    mysql-username: bank
+    mysql-password: bank
+    keycloak-admin-username: admin
+    keycloak-admin-password: admin
+    minio-root-user: minioadmin
+    minio-root-password: minioadmin
+    grafana-admin-password: admin
+
+applications:
+  config-server:
+    env:
+      - name: SPRING_APPLICATION_NAME
+        value: configserver
+      - name: SPRING_PROFILES_ACTIVE
+        value: git
+      - name: SPRING_CLOUD_CONFIG_SERVER_GIT_URI
+        value: https://github.com/YanVelasco/bank-config
+      - name: SPRING_CLOUD_CONFIG_SERVER_GIT_USERNAME
+        value: yanvelasco
+      - name: JAVA_TOOL_OPTIONS
+        value: -javaagent:/app/libs/opentelemetry-javaagent.jar
+      - name: OTEL_SERVICE_NAME
+        value: configserver
+      - name: OTEL_EXPORTER_OTLP_ENDPOINT
+        value: http://tempo:4318
+      - name: OTEL_EXPORTER_OTLP_PROTOCOL
+        value: http/protobuf
+      - name: OTEL_LOGS_EXPORTER
+        value: none
+      - name: OTEL_METRICS_EXPORTER
+        value: none
+      - name: OTEL_TRACES_EXPORTER
+        value: otlp
+  eurekaserver:
+    env:
+      - name: SPRING_APPLICATION_NAME
+        value: eurekaserver
+      - name: SPRING_CONFIG_IMPORT
+        value: optional:configserver:http://config-server:8071/
+      - name: JAVA_TOOL_OPTIONS
+        value: -javaagent:/app/libs/opentelemetry-javaagent.jar
+      - name: OTEL_SERVICE_NAME
+        value: eurekaserver
+      - name: OTEL_EXPORTER_OTLP_ENDPOINT
+        value: http://tempo:4318
+  accounts:
+    env:
+      - name: SPRING_APPLICATION_NAME
+        value: accounts
+      - name: SPRING_CONFIG_IMPORT
+        value: configserver:http://config-server:8071/
+      - name: SPRING_DATASOURCE_URL
+        value: jdbc:mysql://mysql-accounts:3306/accountsdb
+      - name: SPRING_DATASOURCE_USERNAME
+        valueFrom:
+          secretKeyRef:
+            name: bank-secrets
+            key: mysql-username
+      - name: SPRING_DATASOURCE_PASSWORD
+        valueFrom:
+          secretKeyRef:
+            name: bank-secrets
+            key: mysql-password
+      - name: EUREKA_INSTANCE_HOSTNAME
+        value: accounts
+      - name: EUREKA_INSTANCE_PREFER_IP_ADDRESS
+        value: "false"
+      - name: JAVA_TOOL_OPTIONS
+        value: -javaagent:/app/libs/opentelemetry-javaagent.jar
+      - name: OTEL_SERVICE_NAME
+        value: accounts
+  loans:
+    env:
+      - name: SPRING_APPLICATION_NAME
+        value: loans
+      - name: SPRING_CONFIG_IMPORT
+        value: configserver:http://config-server:8071/
+      - name: SPRING_DATASOURCE_URL
+        value: jdbc:mysql://mysql-loans:3306/loansdb
+      - name: SPRING_DATASOURCE_USERNAME
+        valueFrom:
+          secretKeyRef:
+            name: bank-secrets
+            key: mysql-username
+      - name: SPRING_DATASOURCE_PASSWORD
+        valueFrom:
+          secretKeyRef:
+            name: bank-secrets
+            key: mysql-password
+      - name: EUREKA_INSTANCE_HOSTNAME
+        value: loans
+      - name: EUREKA_INSTANCE_PREFER_IP_ADDRESS
+        value: "false"
+      - name: JAVA_TOOL_OPTIONS
+        value: -javaagent:/app/libs/opentelemetry-javaagent.jar
+      - name: OTEL_SERVICE_NAME
+        value: loans
+  cards:
+    env:
+      - name: SPRING_APPLICATION_NAME
+        value: cards
+      - name: SPRING_CONFIG_IMPORT
+        value: configserver:http://config-server:8071/
+      - name: SPRING_DATASOURCE_URL
+        value: jdbc:mysql://mysql-cards:3306/cardsdb
+      - name: SPRING_DATASOURCE_USERNAME
+        valueFrom:
+          secretKeyRef:
+            name: bank-secrets
+            key: mysql-username
+      - name: SPRING_DATASOURCE_PASSWORD
+        valueFrom:
+          secretKeyRef:
+            name: bank-secrets
+            key: mysql-password
+      - name: EUREKA_INSTANCE_HOSTNAME
+        value: cards
+      - name: EUREKA_INSTANCE_PREFER_IP_ADDRESS
+        value: "false"
+      - name: JAVA_TOOL_OPTIONS
+        value: -javaagent:/app/libs/opentelemetry-javaagent.jar
+      - name: OTEL_SERVICE_NAME
+        value: cards
+  message:
+    env:
+      - name: SPRING_APPLICATION_NAME
+        value: message
+  gatewayserver:
+    env:
+      - name: SPRING_APPLICATION_NAME
+        value: gatewayserver
+      - name: SPRING_CONFIG_IMPORT
+        value: configserver:http://config-server:8071/
+      - name: SPRING_DATA_REDIS_HOST
+        value: redis
+      - name: SPRING_DATA_REDIS_PORT
+        value: "6379"
+      - name: SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI
+        value: http://keycloak:8080/realms/master/protocol/openid-connect/certs
+      - name: JAVA_TOOL_OPTIONS
+        value: -javaagent:/app/libs/opentelemetry-javaagent.jar
+      - name: OTEL_SERVICE_NAME
+        value: gatewayserver

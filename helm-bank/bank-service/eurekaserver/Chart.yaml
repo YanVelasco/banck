@@ -1,0 +1,10 @@
+apiVersion: v2
+name: eurekaserver
+description: Bank Eureka discovery server
+type: application
+version: 0.1.0
+appVersion: "v4"
+dependencies:
+  - name: bank-common
+    version: 0.1.0
+    repository: file://../../bank-common

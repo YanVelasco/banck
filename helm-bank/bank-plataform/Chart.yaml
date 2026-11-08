@@ -1,0 +1,31 @@
+apiVersion: v2
+name: bank-plataform
+description: Umbrella chart for the Bank microservices
+type: application
+version: 0.1.0
+appVersion: "1.0.0"
+dependencies:
+  - name: bank-common
+    version: 0.1.0
+    repository: file://../bank-common
+  - name: config-server
+    version: 0.1.0
+    repository: file://../bank-service/config-server
+  - name: eurekaserver
+    version: 0.1.0
+    repository: file://../bank-service/eurekaserver
+  - name: accounts
+    version: 0.1.0
+    repository: file://../bank-service/accounts
+  - name: loans
+    version: 0.1.0
+    repository: file://../bank-service/loans
+  - name: cards
+    version: 0.1.0
+    repository: file://../bank-service/cards
+  - name: message
+    version: 0.1.0
+    repository: file://../bank-service/message
+  - name: gatewayserver
+    version: 0.1.0
+    repository: file://../bank-service/gatewayserver

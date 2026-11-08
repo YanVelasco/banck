@@ -1,0 +1,10 @@
+apiVersion: v2
+name: accounts
+description: Bank accounts microservice
+type: application
+version: 0.1.0
+appVersion: "v8"
+dependencies:
+  - name: bank-common
+    version: 0.1.0
+    repository: file://../../bank-common

@@ -1,0 +1,10 @@
+apiVersion: v2
+name: gatewayserver
+description: Bank API gateway
+type: application
+version: 0.1.0
+appVersion: "v5"
+dependencies:
+  - name: bank-common
+    version: 0.1.0
+    repository: file://../../bank-common

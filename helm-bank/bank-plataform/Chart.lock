@@ -1,0 +1,27 @@
+dependencies:
+- name: bank-common
+  repository: file://../bank-common
+  version: 0.1.0
+- name: config-server
+  repository: file://../bank-service/config-server
+  version: 0.1.0
+- name: eurekaserver
+  repository: file://../bank-service/eurekaserver
+  version: 0.1.0
+- name: accounts
+  repository: file://../bank-service/accounts
+  version: 0.1.0
+- name: loans
+  repository: file://../bank-service/loans
+  version: 0.1.0
+- name: cards
+  repository: file://../bank-service/cards
+  version: 0.1.0
+- name: message
+  repository: file://../bank-service/message
+  version: 0.1.0
+- name: gatewayserver
+  repository: file://../bank-service/gatewayserver
+  version: 0.1.0
+digest: sha256:c898e970ce9fce617e69b3395020516d7f40998221ca75a5780461c8da9b3512
+generated: "2026-11-08T16:02:05.8641739-03:00"
